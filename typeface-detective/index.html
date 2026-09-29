@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Typeface Detective: classify 103 typefaces, zoom in on letterform details, spot the odd one out, and choose the right type for real design jobs.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2317202b'/%3E%3Ctext x='32' y='47' font-family='Georgia,serif' font-size='44' font-style='italic' text-anchor='middle' fill='%23eef1f5'%3Eg%3C/text%3E%3C/svg%3E">
+<style>html,body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Typeface Detective</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:wght@500;600&display=swap">
+<style>
+/* Layout: masthead with rank meter, activity tabs, then the activity card beside a sticky reference rail (classes + anatomy). Specimens sit on white "proof paper" in both themes. */
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --stage:#d9dee6; --ink:#17202b; --muted:#5a6574; --line:#d3d9e1;
+  --pencil:#2f62c9; --pencil-soft:#e2eafb;
+  --good:#1e7547; --good-soft:#e3f3ea; --bad:#b3261e; --bad-soft:#fbe8e6;
+  --proof:#ffffff; --proof-ink:#141414;
+  --display:"Newsreader",Georgia,serif; --ui:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11151b; --surface:#19202a; --stage:#0b0e12; --ink:#e6eaf0; --muted:#9aa5b3; --line:#2b3441;
+  --pencil:#86a8ff; --pencil-soft:#1e2a44; --good:#62c994; --good-soft:#15301f; --bad:#ff8d84; --bad-soft:#3a1d1b;
+  --proof:#fbfaf7; --proof-ink:#141414; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11151b; --surface:#19202a; --stage:#0b0e12; --ink:#e6eaf0; --muted:#9aa5b3; --line:#2b3441;
+  --pencil:#86a8ff; --pencil-soft:#1e2a44; --good:#62c994; --good-soft:#15301f; --bad:#ff8d84; --bad-soft:#3a1d1b;
+  --proof:#fbfaf7; --proof-ink:#141414; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--ui)}
+.wrap{max-width:1260px;margin:0 auto;padding-inline:clamp(16px,3vw,32px);padding-block:24px 48px}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--pencil);outline-offset:2px}
+
+.mast{display:flex;flex-wrap:wrap;gap:16px 32px;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:18px}
+.kicker{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--pencil);margin:0 0 10px}
+h1{font:600 clamp(32px,5vw,46px)/1.02 var(--display);letter-spacing:-.01em;margin:0 0 10px}
+.lede{margin:0;max-width:66ch;color:var(--muted)}
+.rank{min-width:240px;display:grid;gap:6px}
+.rank .rn{display:flex;justify-content:space-between;gap:10px;font-weight:600}
+.rank .rn span:last-child{font:500 12px/1.6 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{height:8px;background:var(--line);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ink);transition:width .4s}
+.rank small{color:var(--muted);font-size:12.5px}
+
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.tabs button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:600;font-size:14px;color:var(--muted)}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:24px;align-items:start}
+main{min-width:0;display:grid;gap:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:clamp(16px,2.4vw,24px);min-width:0}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font:500 12px/1.2 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.titleRow{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;margin:8px 0 6px}
+h2{font:600 24px/1.2 var(--display);margin:0;text-wrap:balance}
+.piece{margin:0 0 14px;color:var(--muted);font-size:14.5px}
+.chip{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:999px;background:var(--pencil-soft);color:var(--pencil)}
+.ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 12px;font-size:13px;color:var(--muted)}
+.ctrl .lbl{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.mini{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.mini button{border:0;background:var(--surface);padding:6px 11px;font-size:12.5px;font-weight:500;color:var(--muted)}
+.mini button+button{border-left:1px solid var(--line)}
+.mini button[aria-pressed="true"]{background:var(--pencil-soft);color:var(--pencil)}
+.ctrl label.tg{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+
+.stageWrap{background:var(--stage);padding:14px;border-radius:8px;container:stage/inline-size}
+.proof{background:var(--proof);color:var(--proof-ink);border-radius:6px;padding:26px 22px;text-align:center;overflow:hidden;min-width:0}
+.spec{font-size:clamp(46px,9vw,96px);line-height:1.1;overflow-wrap:anywhere}
+.spec2{font-size:clamp(20px,3vw,28px);line-height:1.35;margin-top:10px;overflow-wrap:anywhere}
+.loading{display:grid;place-items:center;min-height:220px;color:var(--muted);font-size:14px;text-align:center;gap:10px}
+.loading button{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:8px 14px;font-weight:600}
+.zoomBox{width:min(100%,340px);aspect-ratio:1;margin:0 auto;background:var(--proof);border-radius:8px;overflow:hidden;position:relative;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.zoomBox .g{position:absolute;inset:0;display:grid;place-items:center;font-size:250px;line-height:1;color:var(--proof-ink);transition:transform .45s ease}
+.zoomMeta{display:flex;justify-content:center;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.zoomMeta .pips{display:flex;gap:4px}.zoomMeta .pips i{width:22px;height:6px;border-radius:3px;background:var(--line)}.zoomMeta .pips i.on{background:var(--pencil)}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@container stage (max-width:520px){.tiles{grid-template-columns:1fr}}
+.tile{display:block;position:relative;background:var(--proof);color:var(--proof-ink);border-radius:8px;padding:22px 14px;text-align:center;cursor:pointer;border:3px solid transparent;min-width:0}
+.tile input{position:absolute;opacity:0;pointer-events:none}
+.tile:has(input:checked){border-color:var(--pencil)}
+.tile:has(input:focus-visible){outline:2px solid var(--pencil);outline-offset:2px}
+.tile .s{font-size:clamp(34px,6vw,54px);line-height:1.15;overflow-wrap:anywhere}
+.tile .cap{display:block;margin-top:10px;font:500 11px/1.3 var(--mono);color:#555;min-height:14px}
+.tile.right{border-color:var(--good)} .tile.wrong{border-color:var(--bad)}
+.tile .n{position:absolute;top:8px;left:10px;font:600 11px/1 var(--mono);color:#888}
+.mock{border-radius:8px;padding:22px;min-height:190px;display:flex;flex-direction:column;justify-content:center;gap:10px;overflow:hidden;text-align:center}
+.mock .h{font-size:34px;line-height:1.1;overflow-wrap:anywhere}
+.mock .b{font-size:16px;line-height:1.5;text-align:left}
+.mock .ctx{font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;opacity:.7}
+.jobs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@container stage (max-width:760px){.jobs{grid-template-columns:1fr}}
+.job{display:block;position:relative;cursor:pointer;border-radius:10px;border:3px solid transparent;min-width:0}
+.job input{position:absolute;opacity:0;pointer-events:none}
+.job:has(input:checked){border-color:var(--pencil)}
+.job:has(input:focus-visible){outline:2px solid var(--pencil);outline-offset:2px}
+.job.right{border-color:var(--good)} .job.wrong{border-color:var(--bad)}
+.job .n{position:absolute;top:8px;left:10px;font:600 11px/1 var(--mono);opacity:.6;z-index:1}
+.job .why{display:block;padding:8px 4px 2px;font-size:13px;color:var(--muted);text-align:left}
+
+.hintRow{display:flex;justify-content:flex-end;margin-top:10px}
+.ghost{background:none;border:1px solid var(--line);border-radius:6px;padding:7px 12px;font-size:13px;font-weight:500;color:var(--muted)}
+fieldset{border:0;padding:0;margin:18px 0 0;min-width:0}
+legend{font-weight:600;margin-bottom:10px;padding:0}
+.opts{display:grid;gap:8px}
+.opts.grid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+.opt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;align-items:start;padding:12px 14px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:pointer}
+.opt input{margin:3px 0 0;accent-color:var(--pencil);width:17px;height:17px}
+.opt:has(input:checked){border-color:var(--pencil);box-shadow:inset 0 0 0 1px var(--pencil)}
+.opt.right{border-color:var(--good);background:var(--good-soft);box-shadow:none}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);box-shadow:none}
+.opt small{grid-column:2;color:var(--muted);font-size:12.5px}
+.opt.locked{cursor:default}
+.ogroup{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:8px 0 2px;grid-column:1/-1}
+
+#feedback:empty{display:none}
+#feedback{margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-radius:8px;display:grid;gap:10px}
+.verdict{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+.pill{font:600 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:999px}
+.pill.ok{background:var(--good-soft);color:var(--good)} .pill.no{background:var(--bad-soft);color:var(--bad)} .pill.xp{background:var(--pencil-soft);color:var(--pencil)}
+.diff{font-family:var(--mono);font-size:13px;background:var(--stage);padding:8px 10px;border-radius:6px;overflow-x:auto}
+.diff span{color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:11px;margin-right:8px}
+#feedback p{margin:0}
+.reveal{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.reveal div{background:var(--proof);color:var(--proof-ink);border-radius:6px;padding:10px 12px}
+.reveal b{display:block;font:600 11px/1.3 var(--mono);color:#555;margin-top:4px}
+.reveal .rs{font-size:28px;line-height:1.2;overflow-wrap:anywhere}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;align-items:center}
+.primary{background:var(--ink);color:var(--bg);border:0;border-radius:7px;padding:11px 20px;font-weight:600}
+.primary:disabled{opacity:.4;cursor:not-allowed}
+.secondary{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:10px 18px;font-weight:600}
+.status{font-size:13px;color:var(--muted)}
+.timer{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:12px}.timer i{display:block;height:100%;background:var(--pencil);width:100%}
+.lengths{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.lengths button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:14px 22px;min-width:110px;text-align:left}
+.lengths b{display:block;font:600 26px/1 var(--display)}
+.lengths small{color:var(--muted)}
+.muted{color:var(--muted)}
+.big{font:600 64px/1 var(--display);margin:10px 0 4px;font-variant-numeric:tabular-nums}
+.missed{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:8px}
+.missed li{border:1px solid var(--line);border-radius:7px;padding:10px 12px}
+.missed small{display:block;color:var(--muted)}
+select,input[type=search]{padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--surface);max-width:100%}
+
+.guide{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.gcard{background:var(--proof);color:var(--proof-ink);border-radius:8px;padding:14px;min-width:0;border:2px solid transparent}
+.gcard.flash{border-color:var(--pencil)}
+.gcard .gs{font-size:44px;line-height:1.1;min-height:50px;overflow-wrap:anywhere}
+.gcard .gs2{font-size:17px;line-height:1.3;min-height:22px;margin-top:4px;overflow-wrap:anywhere}
+.gcard .gn{display:flex;justify-content:space-between;gap:6px;margin-top:10px;font:600 13px/1.3 var(--ui)}
+.gcard .gc{font:500 10.5px/1.4 var(--mono);color:#2f62c9;text-transform:uppercase;letter-spacing:.05em}
+.gcard p{margin:4px 0 0;font:400 12.5px/1.45 var(--ui);color:#555}
+.gcard button{margin-top:6px;background:none;border:0;padding:0;font:500 12px/1 var(--ui);color:#2f62c9;text-decoration:underline}
+.gcard .ok{font:600 11px/1 var(--mono);color:#1e7547}
+.gfilter{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;align-items:center}
+
+.vocab{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.vocab h2{font-size:20px}
+.vocab>p{font-size:12.5px;color:var(--muted);margin:6px 0 10px}
+.group{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--pencil);margin:14px 0 6px}
+.terms{display:grid;gap:4px}
+.term{border:1px solid transparent;border-radius:7px;padding:7px 9px;transition:background .2s}
+.term .tn{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:600;font-size:13.5px}
+.term .ex{font-size:22px;font-weight:400;line-height:1}
+.term .td{display:block;margin-top:2px;font-size:12.5px;line-height:1.45;color:var(--muted)}
+.term.on{background:var(--pencil-soft);border-color:var(--pencil)}
+.reset{margin-top:12px;background:none;border:0;padding:0;font-size:12px;color:var(--muted);text-decoration:underline}
+.colophon{margin-top:28px;font-size:12px;color:var(--muted);max-width:90ch}
+@media (max-width:980px){.layout{grid-template-columns:1fr}.vocab{position:static;max-height:none}.terms{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <a href="../" style="display:inline-block;margin:0 0 14px;font:500 13px/1 'IBM Plex Sans',system-ui,sans-serif;color:var(--pencil);text-decoration:none">← All Design Detective apps</a>
+<header class="mast">
+    <div>
+      <p class="kicker">103 typefaces · 9 classes · 7 ways to play</p>
+      <h1>Typeface Detective</h1>
+      <p class="lede">Train your eye to read the evidence in letterforms: serifs, contrast, stress, and shape. Classify faces, zoom in on details, spot the odd one out, and choose the right type for real jobs.</p>
+    </div>
+    <div class="rank" aria-live="polite">
+      <div class="rn"><span id="rankName">Type Tourist</span><span id="xpText">0 XP</span></div>
+      <div class="bar"><i id="xpBar"></i></div>
+      <small id="streakText">Streak 0 · Best 0</small>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Activities">
+    <button type="button" data-tab="classify" aria-pressed="true">Classify</button>
+    <button type="button" data-tab="zoom" aria-pressed="false">Zoom Reveal</button>
+    <button type="button" data-tab="odd" aria-pressed="false">Odd One Out</button>
+    <button type="button" data-tab="same" aria-pressed="false">Same or Different</button>
+    <button type="button" data-tab="job" aria-pressed="false">Right Type for the Job</button>
+    <button type="button" data-tab="pair" aria-pressed="false">Pairing Lab</button>
+    <button type="button" data-tab="guide" aria-pressed="false">Field Guide</button>
+    <button type="button" data-tab="challenge" aria-pressed="false">Challenge</button>
+  </nav>
+
+  <div class="layout">
+    <main>
+      <section id="setup" class="card" hidden>
+        <h2>Challenge mode</h2>
+        <p class="muted" style="margin:6px 0 0">A mixed test across every game: classify, zoom, odd one out, same or different, right type, and pairing. No hints. Double points.</p>
+        <div id="lengths" class="lengths"></div>
+      </section>
+
+      <section id="play" class="card">
+        <div class="meta"><span id="caseLabel"></span><span id="progress"></span></div>
+        <div class="titleRow"><h2 id="caseTitle"></h2><span id="termChip" class="chip" hidden></span></div>
+        <p id="piece" class="piece"></p>
+        <div id="ctrl" class="ctrl"></div>
+        <div id="timerWrap" class="timer" hidden><i id="timerBar"></i></div>
+        <div class="stageWrap"><div id="stage"></div></div>
+        <fieldset id="fs" hidden>
+          <legend id="legend"></legend>
+          <div id="opts" class="opts"></div>
+        </fieldset>
+        <div id="feedback" aria-live="polite"></div>
+        <div class="actions">
+          <button id="checkBtn" type="button" class="primary" disabled>Check answer</button>
+          <button id="nextBtn" type="button" class="primary" hidden>Next</button>
+          <span id="status" class="status"></span>
+        </div>
+      </section>
+
+      <section id="guideSec" class="card" hidden>
+        <h2>Field Guide</h2>
+        <p class="muted" style="margin:6px 0 14px">All 103 typefaces with their class and identifying clues. A check mark means you've identified it correctly in a game.</p>
+        <div class="gfilter"><select id="gClass" aria-label="Filter by class"></select><input type="search" id="gSearch" placeholder="Search by name" aria-label="Search typefaces"><span id="gCount" class="status"></span></div>
+        <div id="guide" class="guide"></div>
+      </section>
+
+      <section id="results" class="card" hidden></section>
+    </main>
+
+    <aside class="vocab" aria-labelledby="vocabHead">
+      <h2 id="vocabHead">Reference</h2>
+      <p>The class or feature behind each answer is highlighted here.</p>
+      <div id="terms"></div>
+      <button id="resetBtn" type="button" class="reset">Reset my points and progress</button>
+    </aside>
+  </div>
+  <p class="colophon">Typefaces load from Google Fonts. Each question waits until its typefaces have loaded, so you never judge a stand-in font. Classification is a spectrum: where experts disagree about a face, the game accepts more than one class and says so.</p>
+</div>
+
+<script>
+/* ═════════ CLASSES & REFERENCE ═════════ */
+const CL={
+ OS:{n:"Old Style",fam:"Serif",ex:"EB Garamond",d:"Renaissance-rooted serif: angled stress, moderate contrast, bracketed serifs, and a small x-height.",look:"Look for the thickest part of the o tilted to the left, and gently curved (bracketed) serifs."},
+ TR:{n:"Transitional",fam:"Serif",ex:"Libre Baskerville",d:"18th-century refinement: more vertical stress, sharper contrast, bracketed serifs, a larger x-height.",look:"Look for near-vertical stress and higher contrast than Old Style, but serifs still slightly bracketed."},
+ DI:{n:"Didone (Modern)",fam:"Serif",ex:"Bodoni Moda",d:"Extreme contrast: hairline thin strokes, vertical stress, flat unbracketed serifs, often ball terminals.",look:"Look for razor-thin hairlines against heavy verticals, and flat serifs that meet the stem at a right angle."},
+ SL:{n:"Slab Serif",fam:"Slab Serif",ex:"Roboto Slab",d:"Heavy, block-like serifs about as thick as the strokes, with low contrast.",look:"Look for serifs that are thick rectangles rather than tapered wedges."},
+ GR:{n:"Grotesque",fam:"Sans Serif",ex:"Work Sans",d:"Industrial sans: near-even strokes, rational upright forms, fairly closed apertures. Includes condensed gothics and neo-grotesques.",look:"Look for strokes that end horizontally and c, e, s that curl back in on themselves."},
+ HU:{n:"Humanist",fam:"Sans Serif",ex:"Fira Sans",d:"Sans shaped by the pen: open apertures, slight stroke contrast, varied letter widths.",look:"Look for open c, e, a and slight thick-thin modulation, as if written with a broad pen."},
+ GE:{n:"Geometric",fam:"Sans Serif",ex:"Montserrat",d:"Sans built from circles, triangles, and straight lines: round o, even strokes, often wide.",look:"Look for near-perfect circles in o, c, d and very even stroke weight."},
+ SC:{n:"Script",fam:"Script",ex:"Great Vibes",d:"Letters that imitate pen or brush writing, often connected. Ranges from formal calligraphy to casual brush.",look:"Look for joining strokes, slanted forms, and entry and exit strokes like handwriting."},
+ DE:{n:"Decorative",fam:"Decorative",ex:"Monoton",d:"Built for display: ornament, texture, novelty, or a strong theme. Not for body text.",look:"Look for a theme or effect (pixels, stencil, inline, 3D, wood type) that overrides the basic structure."}
+};
+const FAMS=["Serif","Slab Serif","Sans Serif","Script","Decorative"];
+const ANAT=[
+ ["serif","Serif","Small strokes that finish the ends of letters."],["bracket","Bracket","The curved join between a serif and the stem. Old Style serifs are bracketed; Didone serifs are not."],
+ ["contrast","Stroke contrast","The difference between thick and thin strokes. Didones have the most; monoline faces have none."],
+ ["stress","Stress","The angle of thickening in round letters. Angled in Old Style, vertical in Transitional and Didone."],
+ ["xheight","x-height","The height of lowercase letters like x. A large x-height reads well at small sizes."],
+ ["aperture","Aperture","The opening in letters like c, e, and a. Humanist faces are open; Grotesques are more closed."],
+ ["terminal","Terminal & ball terminal","The end of a stroke without a serif. A ball terminal is a round drop, common in Didones."],
+ ["story","Single- vs double-story","A double-story a or g has two stacked parts; single-story has one bowl. A quick clue in sans faces."],
+ ["monoline","Monoline","Strokes of one even thickness, common in geometric sans and many scripts."],
+ ["condensed","Width","Condensed faces are narrow; extended faces are wide. Width changes voice and space use."]
+];
+
+/* ═════════ TYPEFACE DATA: [name, class, accepted alternates, capsOnly, clue] ═════════ */
+const RAW=[
+["Roboto","GR","HU",0,"Neo-grotesque skeleton with friendlier, open curves."],
+["Open Sans","HU","",0,"Open apertures and upright stress; tuned for screens."],
+["Lato","HU","GR",0,"Semi-rounded details give warmth to a serious structure."],
+["Montserrat","GE","",0,"Wide geometric shapes inspired by old signage in Buenos Aires."],
+["Poppins","GE","",0,"Built on circles and straight lines with very even strokes."],
+["Oswald","GR","",0,"A condensed gothic, reworking the classic Alternate Gothic style."],
+["Raleway","GE","HU",0,"Elegant geometric sans with tall ascenders."],
+["Nunito","HU","GE",0,"A balanced sans with fully rounded stroke ends."],
+["Ubuntu","HU","",0,"Humanist sans with curved tails, made for the Ubuntu operating system."],
+["Josefin Sans","GE","",0,"Vintage geometric with a very low x-height."],
+["Quicksand","GE","",0,"Rounded geometric with soft, round stroke ends."],
+["Bebas Neue","GR","",1,"All capitals, tall and condensed."],
+["Barlow","GR","HU",0,"Slightly rounded grotesk inspired by California road signs."],
+["Cabin","HU","",0,"Humanist sans with geometric touches."],
+["Karla","GR","HU",0,"A quirky grotesque with compact forms."],
+["Manrope","GR","GE",0,"Modern hybrid of grotesque and geometric."],
+["Archivo","GR","",0,"Grotesque built for both text and headlines."],
+["DM Sans","GE","",0,"Low-contrast geometric derived from Poppins."],
+["Work Sans","GR","",0,"Loosely based on early grotesques."],
+["Rubik","GR","GE",0,"Sturdy sans with slightly rounded corners."],
+["Fira Sans","HU","",0,"Humanist sans made for Mozilla's Firefox OS."],
+["Mulish","HU","GE",0,"Minimalist sans with even strokes."],
+["Exo 2","GE","DE",0,"Technological, geometric feel."],
+["Titillium Web","GE","GR",0,"Squared, technical curves."],
+["Signika","HU","",0,"Gentle, low-contrast humanist designed for signage."],
+["Space Grotesk","GR","",0,"Grotesque derived from Space Mono, with quirky details."],
+["Outfit","GE","",0,"Clean geometric made for branding."],
+["League Spartan","GE","",0,"Bold geometric in the spirit of Futura."],
+["Comfortaa","GE","",0,"Rounded geometric with a soft, friendly voice."],
+["Varela Round","GE","HU",0,"Rounded sans with soft stroke ends."],
+["Sora","GE","",0,"Geometric sans with wide, open shapes."],
+["Lexend","GE","HU",0,"Designed to improve reading fluency."],
+["Urbanist","GE","",0,"Low-contrast geometric built on modernist shapes."],
+["Chakra Petch","DE","GR",0,"Squared techno letters with cut corners."],
+["Teko","GR","DE",0,"Squarish, condensed, sporty."],
+["Unica One","DE","GE",1,"Unicase: capitals and lowercase share one height."],
+["Noto Serif","TR","",0,"Neutral text serif built to cover many writing systems."],
+["Merriweather","TR","",0,"Sturdy screen serif with a large x-height."],
+["Lora","TR","OS",0,"Contemporary text serif with calligraphic roots."],
+["Playfair Display","DI","TR",0,"High contrast with delicate hairlines and ball terminals."],
+["Libre Baskerville","TR","",0,"Baskerville-style serif optimized for screens."],
+["Cormorant Garamond","OS","",0,"Display Garamond with sharp details and a small x-height."],
+["Crimson Text","OS","",0,"Book face in the tradition of Garamond-era old styles."],
+["EB Garamond","OS","",0,"Revival of Claude Garamond's 16th-century types."],
+["Bitter","SL","",0,"Contemporary slab designed for screen reading."],
+["Cardo","OS","",0,"Scholarly old style inspired by Aldus Manutius's types."],
+["Spectral","OS","TR",0,"Elegant contemporary serif for screen reading."],
+["Vollkorn","OS","",0,"Dark, sturdy text face with old-style roots."],
+["PT Serif","TR","",0,"Transitional serif with humanist touches."],
+["DM Serif Display","DI","TR",0,"High-contrast display serif."],
+["Bodoni Moda","DI","",0,"Revival of Bodoni's extreme-contrast modern style."],
+["Cormorant","OS","",0,"Garamond-inspired display face with a tiny x-height."],
+["Fraunces","OS","",0,"Soft, slightly \"wonky\" old-style display serif."],
+["Yeseva One","DI","",0,"Heavy, high-contrast display serif with lively curves."],
+["Unna","TR","OS",0,"Contemporary text serif."],
+["Prata","DI","",0,"Didone for display with sharp hairlines."],
+["Rufina","DI","TR",0,"Sharp, high-contrast serif."],
+["Forum","OS","TR",0,"Inspired by Roman inscriptional capitals."],
+["Roboto Slab","SL","",0,"Slab companion to Roboto."],
+["Arvo","SL","",0,"Geometric slab with even strokes."],
+["Zilla Slab","SL","",0,"Contemporary slab made for Mozilla."],
+["Crete Round","SL","",0,"Warm slab with softly rounded serifs."],
+["Bevan","SL","DE",0,"Heavy poster slab."],
+["Rokkitt","SL","",0,"Geometric slab in the early-20th-century tradition."],
+["Alfa Slab One","SL","DE",0,"Heavy contemporary display slab."],
+["Bree Serif","SL","",0,"Friendly, rounded slab."],
+["Abril Fatface","DI","DE",0,"Ultra-heavy Didone for headlines."],
+["Bungee","DE","",1,"Signage capitals designed for urban and vertical signs."],
+["Bowlby One SC","DE","GR",1,"Very heavy sans in capitals and small capitals."],
+["Righteous","DE","GE",0,"Art-deco-inspired rounded display."],
+["Londrina Solid","DE","GR",0,"Chunky, hand-drawn sans."],
+["Monoton","DE","",1,"Multi-line inline letters in a 1950s neon style."],
+["Fugaz One","DE","GR",0,"Fast, italic display sans."],
+["Graduate","SL","DE",1,"Collegiate block letters, like a varsity jacket."],
+["Black Ops One","DE","",1,"Military stencil letters."],
+["Press Start 2P","DE","",0,"8-bit pixel letters from arcade games."],
+["Fredericka the Great","DE","",0,"Sketchy, engraved Victorian-style letters."],
+["Special Elite","SL","DE",0,"Worn typewriter letters."],
+["Rye","DE","SL",0,"Western wood-type poster letters."],
+["Bungee Shade","DE","",1,"Bungee capitals with a built-in 3D shadow."],
+["Cinzel Decorative","DE","OS",1,"Roman capitals with decorative flourishes."],
+["Aladin","DE","SC",0,"Calligraphic display letters."],
+["Archivo Black","GR","DE",0,"The heaviest Archivo, made for headlines."],
+["Anton","GR","DE",0,"Heavy condensed display sans."],
+["Lobster","SC","",0,"Bold, connected retro script."],
+["Pacifico","SC","",0,"Fun, surf-style brush script."],
+["Great Vibes","SC","",0,"Formal, flowing calligraphy."],
+["Dancing Script","SC","",0,"Lively, casual script."],
+["Caveat","SC","",0,"Handwriting; letters don't always connect."],
+["Satisfy","SC","",0,"Casual brush script."],
+["Cookie","SC","",0,"1950s-style brush script."],
+["Courgette","SC","",0,"Medium-contrast brush script that stays readable."],
+["Kaushan Script","SC","",0,"Energetic brush lettering."],
+["Sacramento","SC","",0,"Thin, monoline script."],
+["Allura","SC","",0,"Formal calligraphic script."],
+["Alex Brush","SC","",0,"Formal brush calligraphy."],
+["Yellowtail","SC","",0,"Retro script in a 1930s style."],
+["Parisienne","SC","",0,"Elegant, flowing casual script."],
+["Tangerine","SC","",0,"Tall, narrow calligraphy with a very small x-height."],
+["Oleo Script","SC","",0,"Heavy, rounded retro script."],
+["Mr Dafoe","SC","",0,"Energetic, signature-like brush script."],
+["Euphoria Script","SC","",0,"Light, connected casual script."],
+["Berkshire Swash","SC","DE",0,"Semi-script with decorative swashes."]
+];
+const F=RAW.map(([name,cls,alt,caps,clue])=>({name,cls,alts:alt?alt.split(","):[],caps:!!caps,clue}));
+const FN=Object.fromEntries(F.map(f=>[f.name,f]));
+const famOf=c=>CL[c].fam;
+const accCls=f=>[f.cls,...f.alts];
+const accFam=f=>[...new Set(accCls(f).map(famOf))];
+const TWINS=[["Montserrat","Poppins"],["EB Garamond","Cormorant Garamond"],["Cormorant","Cormorant Garamond"],["Open Sans","Lato"],["Roboto","Work Sans"],["Playfair Display","DM Serif Display"],["Abril Fatface","Yeseva One"],["Roboto Slab","Zilla Slab"],["Arvo","Rokkitt"],["Great Vibes","Allura"],["Parisienne","Alex Brush"],["Quicksand","Comfortaa"],["Nunito","Varela Round"],["Bebas Neue","Oswald"],["Anton","Oswald"],["Poppins","Outfit"],["DM Sans","Manrope"],["Sora","Urbanist"],["Dancing Script","Courgette"],["Yellowtail","Cookie"],["Lobster","Oleo Script"],["Libre Baskerville","PT Serif"],["Bodoni Moda","Prata"],["Fira Sans","Signika"],["Crimson Text","EB Garamond"],["Lora","Merriweather"],["Josefin Sans","League Spartan"],["Satisfy","Sacramento"],["Alfa Slab One","Bevan"],["Crete Round","Bree Serif"],["Lexend","Outfit"],["Karla","Work Sans"],["Cardo","Crimson Text"],["Noto Serif","PT Serif"]];
+
+/* ═════════ SPECIMEN TEXT ═════════ */
+const WORDS=["Hamburgefonstiv","Regal Quartz","Graphic","Jaguar","Typography","Quest","Grace","Garage","Kerning","Wavy Jazz"];
+const LINES=["Sphinx of black quartz, judge my vow.","Pack my box with five dozen liquor jugs.","The quick brown fox jumps over a lazy dog.","Jackdaws love my big sphinx of quartz."];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const caseFor=(f,t)=>f.caps?t.toUpperCase():t;
+const ff=n=>`font-family:'${n}',sans-serif`;
+
+/* ═════════ FONT LOADING (never show a stand-in) ═════════ */
+const FL={};
+function loadFont(name){
+ if(FL[name])return FL[name];
+ FL[name]=new Promise(res=>{
+  const link=document.createElement("link");link.rel="stylesheet";
+  link.href=`https://fonts.googleapis.com/css2?family=${name.replace(/ /g,"+")}&display=block`;
+  let done=false;const fin=v=>{if(!done){done=true;res(v)}};
+  link.onload=()=>document.fonts.load(`48px "${name}"`,"HamburgefonstivRQgaz").then(fs=>fin(fs.length>0)).catch(()=>fin(false));
+  link.onerror=()=>fin(false);setTimeout(()=>fin(false),12000);
+  document.head.appendChild(link)});
+ FL[name].then(ok=>{if(!ok)delete FL[name]});
+ return FL[name]}
+const ensure=names=>Promise.all([...new Set(names)].map(loadFont)).then(r=>r.every(Boolean));
+
+/* ═════════ STATE & SCORING ═════════ */
+const $=id=>document.getElementById(id);
+const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const RANKS=[[0,"Type Tourist"],[100,"Letter Spotter"],[300,"Serif Scout"],[600,"Glyph Hunter"],[1000,"Type Detective"],[1600,"Master Typographer"]];
+let P={xp:0,streak:0,best:0,ids:{}};
+try{Object.assign(P,JSON.parse(localStorage.getItem("typeface-detective")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("typeface-detective",JSON.stringify(P))}catch(e){}};
+let tab="classify",R=null,token=0,level=1,chall=null,speed=null,lastFont=null;
+
+function renderRank(){const cur=[...RANKS].reverse().find(r=>P.xp>=r[0]),i=RANKS.indexOf(cur),nx=RANKS[i+1];
+ $("rankName").textContent=cur[1];$("xpText").textContent=`${P.xp} XP`+(nx?` / ${nx[0]}`:"");
+ $("xpBar").style.width=(nx?Math.min(100,(P.xp-cur[0])/(nx[0]-cur[0])*100):100)+"%";
+ $("streakText").textContent=`Streak ${P.streak} · Best ${P.best}`+(P.streak>=3?" · streak bonus active":"")}
+function award(ok,base){if(!ok){P.streak=0;save();renderRank();return 0}P.streak++;P.best=Math.max(P.best,P.streak);const pts=base*(chall?2:1)+(P.streak>=3?3:0);P.xp+=pts;save();renderRank();return pts}
+const markId=n=>{if(!P.ids[n]){P.ids[n]=1;save()}};
+
+function renderTerms(){
+ $("terms").innerHTML=`<p class="group">Classes</p><div class="terms">${Object.entries(CL).map(([k,c])=>`<div class="term" data-key="${k}"><span class="tn"><span>${c.n}</span><span class="ex" style="${ff(c.ex)}">Rag</span></span><span class="td">${c.d}</span></div>`).join("")}</div>
+ <p class="group">Anatomy</p><div class="terms">${ANAT.map(([k,n,d])=>`<div class="term" data-key="${k}"><span class="tn"><span>${n}</span></span><span class="td">${d}</span></div>`).join("")}</div>`;
+ Object.values(CL).forEach(c=>loadFont(c.ex))}
+function highlight(keys){document.querySelectorAll(".term.on").forEach(t=>t.classList.remove("on"));let first=null;[].concat(keys).forEach(k=>{const c=document.querySelector(`.term[data-key="${k}"]`);if(c){c.classList.add("on");first=first||c}});
+ if(first){const side=document.querySelector(".vocab");if(getComputedStyle(side).position==="sticky")side.scrollTop=first.offsetTop-side.offsetTop-60}}
+
+/* ═════════ HELPERS ═════════ */
+function pickFont(filter=()=>true){let pool=F.filter(f=>filter(f)&&f.name!==lastFont);const f=pick(pool);lastFont=f.name;return f}
+function pickBalanced(){const fam=pick(FAMS);return pickFont(f=>famOf(f.cls)===fam)}
+function radioOpts(list,{grid=false,groups=null}={}){
+ let html="";list.forEach((o,i)=>{if(groups&&groups[i])html+=`<div class="ogroup">${groups[i]}</div>`;html+=`<label class="opt" for="o${i}"><input type="radio" name="o" id="o${i}" value="${i}"><span>${esc(o.t)}</span>${o.sub?`<small>${esc(o.sub)}</small>`:""}</label>`});
+ $("fs").hidden=false;$("opts").className="opts"+(grid?" grid":"");$("opts").innerHTML=html;
+ $("opts").querySelectorAll("input").forEach(r=>r.onchange=()=>{$("checkBtn").disabled=false;if(speed)check()})}
+const selIdx=()=>{const r=document.querySelector('input[name="o"]:checked');return r?+r.value:-1};
+function markOpts(isRight,sel){$("opts").querySelectorAll(".opt").forEach((l,i)=>{l.classList.add("locked");l.querySelector("input").disabled=true;if(isRight(i))l.classList.add("right");else if(i===sel)l.classList.add("wrong")})}
+function evidence(f){const c=CL[f.cls];return `<div class="diff"><span>Answer</span>${esc(f.name)} · ${c.n}${f.alts.length?` (also accepted: ${f.alts.map(a=>CL[a].n).join(", ")})`:""}</div><p><b>Clue:</b> ${esc(f.clue)}</p><p><b>${c.n}:</b> ${esc(c.look)}</p>`}
+function specimen(f,big=true){const w=caseFor(f,pick(WORDS)),l=caseFor(f,pick(LINES));return `<div class="proof"><div class="spec" style="${ff(f.name)}">${esc(w)}</div>${big?`<div class="spec2" style="${ff(f.name)}">${esc(l)}</div>`:""}</div>`}
+const loadingHTML=`<div class="loading" role="status">Loading typefaces…</div>`;
+function failHTML(){return `<div class="loading"><div>These typefaces couldn't load. The game needs a connection to Google Fonts.</div><button type="button" id="retryBtn">Try again</button></div>`}
+
+/* ═════════ GAME 1 · CLASSIFY ═════════ */
+function classifyRound(lv){
+ lv=lv||level;const f=lv===1?pickBalanced():pickFont();let opts,others=[];
+ if(lv===1)opts=FAMS.map(t=>({t,ok:accFam(f).includes(t)}));
+ else if(lv===2)opts=["OS","TR","DI","SL","GR","HU","GE","SC","DE"].map(k=>({t:CL[k].n,k,ok:accCls(f).includes(k)}));
+ else{let pool=F.filter(x=>x.cls===f.cls&&x!==f);if(pool.length<3)pool=F.filter(x=>famOf(x.cls)===famOf(f.cls)&&x!==f);others=shuffle(pool).slice(0,3);opts=shuffle([f,...others]).map(x=>({t:x.name,ok:x===f}))}
+ const pts=[0,5,10,15][lv];
+ return{type:"classify",fonts:[f.name],label:`Classify · level ${lv} · ${["","family","class","name it"][lv]}`,
+  title:lv===1?"Which type family is this?":lv===2?"Which class is this typeface?":"Which typeface is this?",
+  piece:lv===3?`It's ${/^[AEIOU]/.test(CL[f.cls].n)?"an":"a"} ${CL[f.cls].n} face. Choose the exact typeface.`:"Study the serifs, contrast, stress, and letter shapes.",
+  ctrl:()=>chall?"":`<span class="lbl">Level</span><span class="mini" role="group" aria-label="Level">${[[1,"1 · Family"],[2,"2 · Class"],[3,"3 · Name it"]].map(([n,l])=>`<button type="button" data-lv="${n}" aria-pressed="${level===n}">${l}</button>`).join("")}</span>`,
+  bindCtrl(){$("ctrl").querySelectorAll("[data-lv]").forEach(b=>b.onclick=()=>{level=+b.dataset.lv;newRound()})},
+  draw(){$("stage").innerHTML=specimen(f);
+   if(lv===2)radioOpts(opts,{grid:true,groups:{0:"Serif",3:"Slab",4:"Sans serif",7:"Script & decorative"}});else radioOpts(opts,{grid:lv===1})},
+  check(){const s=selIdx(),ok=opts[s].ok,p=award(ok,pts);markOpts(i=>opts[i].ok,s);if(ok)markId(f.name);
+   let extra="";if(lv===3){extra=`<div class="reveal">${[f,...others].map(x=>`<div><div class="rs" style="${ff(x.name)}">${esc(caseFor(x,"Rag Quest"))}</div><b>${esc(x.name)}</b></div>`).join("")}</div>`}
+   const alt=ok&&lv>1&&opts[s].k&&opts[s].k!==f.cls?`<p class="muted">Your answer is accepted: experts place this face on the border between classes.</p>`:"";
+   return{ok,pts:p,hl:[f.cls],title:f.name,html:evidence(f)+alt+extra,miss:{t:f.name,fix:CL[f.cls].n}}}}
+}
+
+/* ═════════ GAME 2 · ZOOM REVEAL ═════════ */
+function zoomRound(){
+ const f=pickFont(x=>x.cls!=="DE"),ch=pick(f.caps?["R","Q","G","S"]:["a","g","e","R","k","Q"]),origin=pick(["35% 60%","62% 42%","48% 72%","40% 35%","58% 58%"]);
+ const Z=[5,3,1.8,1],pts=[20,15,10,6,3];let step=0;
+ const neighbors={OS:["TR","DI","SL"],TR:["OS","DI","SL"],DI:["TR","OS","SL"],SL:["TR","GR","OS"],GR:["HU","GE","SL"],HU:["GR","GE","OS"],GE:["GR","HU","SL"],SC:["DE","OS","HU"]};
+ const choices=shuffle([f.cls,...neighbors[f.cls]]).map(k=>({t:CL[k].n,k,ok:accCls(f).includes(k)}));
+ const paint=()=>{const box=$("zg");if(!box)return;if(step<4){box.style.transformOrigin=origin;box.style.transform=`scale(${Z[step]})`;box.textContent=ch}else{box.style.transform="scale(1)";box.style.fontSize="clamp(40px,9vw,64px)";box.textContent=caseFor(f,"Rag Quest")}
+  $("zpips").innerHTML=[0,1,2,3,4].map(i=>`<i class="${i<=step?"on":""}"></i>`).join("");$("zpts").textContent=`Worth ${pts[step]} XP`;$("zBtn").disabled=step>=4||(R&&R.answered);$("zBtn").textContent=step>=3?"Show a full word":"Zoom out"};
+ return{type:"zoom",fonts:[f.name],label:"Zoom Reveal",title:"What class is this letter from?",piece:"You're looking at an extreme close-up. Zoom out for more evidence, but each step lowers the points.",
+  ctrl:()=>"",bindCtrl(){},
+  draw(){$("stage").innerHTML=`<div class="zoomBox"><div class="g" id="zg" style="${ff(f.name)}"></div></div><div class="zoomMeta"><span class="pips" id="zpips"></span><span class="status" id="zpts"></span><button type="button" class="secondary" id="zBtn">Zoom out</button></div>`;
+   $("zBtn").onclick=()=>{if(step<4){step++;paint()}};paint();radioOpts(choices)},
+  check(){const s=selIdx(),ok=choices[s].ok,p=award(ok,pts[step]);markOpts(i=>choices[i].ok,s);step=4;paint();if(ok)markId(f.name);
+   return{ok,pts:p,hl:[f.cls,"serif","contrast","stress"],title:`${f.name} · the letter ${ch}`,html:evidence(f),miss:{t:`${f.name} (zoomed ${ch})`,fix:CL[f.cls].n}}}}
+}
+
+/* ═════════ GAME 3 · ODD ONE OUT ═════════ */
+const ODDPAIRS=[["OS","TR"],["TR","DI"],["OS","DI"],["GR","HU"],["HU","GE"],["GR","GE"],["SL","TR"],["SL","GR"],["SC","DE"]];
+function oddRound(){
+ let X,Y,maj,odd,t=0;do{[X,Y]=shuffle(pick(ODDPAIRS));maj=shuffle(F.filter(f=>f.cls===X&&!f.alts.includes(Y))).slice(0,3);odd=pick(F.filter(f=>f.cls===Y&&!f.alts.includes(X)));t++}while((maj.length<3||!odd)&&t<30);
+ const tiles=shuffle([...maj,odd]),word=pick(["Rag Quest","Graphic","Jaguar","Regal"]);
+ return{type:"odd",fonts:tiles.map(f=>f.name),label:"Odd One Out",title:"Three of these share a class. Which one doesn't belong?",piece:"All four show the same word. Compare serifs, contrast, stress, and shapes like a, g, R, and Q.",
+  ctrl:()=>"",bindCtrl(){},
+  draw(){$("stage").innerHTML=`<div class="tiles" role="radiogroup" aria-label="Specimens">${tiles.map((f,i)=>`<label class="tile" id="t${i}"><input type="radio" name="o" value="${i}"><span class="n">${i+1}</span><div class="s" style="${ff(f.name)}">${esc(caseFor(f,word))}</div><span class="cap"></span></label>`).join("")}</div>`;
+   $("stage").querySelectorAll('input[name="o"]').forEach(r=>r.onchange=()=>$("checkBtn").disabled=false)},
+  check(){const s=selIdx(),ok=tiles[s]===odd,p=award(ok,10);
+   tiles.forEach((f,i)=>{const el=$("t"+i);el.querySelector("input").disabled=true;el.querySelector(".cap").textContent=`${f.name} · ${CL[f.cls].n}`;if(f===odd)el.classList.add("right");else if(i===s)el.classList.add("wrong")});
+   if(ok)markId(odd.name);
+   return{ok,pts:p,hl:[X,Y],title:`${odd.name} is the ${CL[Y].n} face`,html:`<div class="diff"><span>Pattern</span>3 × ${CL[X].n} · 1 × ${CL[Y].n}</div><p><b>${CL[X].n}:</b> ${esc(CL[X].look)}</p><p><b>${CL[Y].n}:</b> ${esc(CL[Y].look)}</p>`,miss:{t:`Odd one out: ${odd.name}`,fix:`${CL[Y].n} among ${CL[X].n} faces`}}}}
+}
+
+/* ═════════ GAME 4 · SAME OR DIFFERENT ═════════ */
+function sameRound(){
+ const pr=pick(TWINS),same=Math.random()<.45,a=FN[pick(pr)],b=same?a:FN[pr.find(n=>n!==a.name)];const flip=Math.random()<.5,L=flip?b:a,Rr=flip?a:b;
+ const word=pick(["Rag Quest","Graphic","Jaguar","Kerning","Waving"]);const opts=[{t:"Same typeface",ok:same},{t:"Different typefaces",ok:!same}];
+ return{type:"same",fonts:[a.name,b.name],label:speed?"Same or Different · speed round":"Same or Different",title:"Same typeface, or two different ones?",piece:"These are near-twins. Look closely at single letters: the a, g, R, Q, and the stroke ends.",
+  ctrl:()=>chall?"":`<label class="tg"><input type="checkbox" id="spT" ${speed?"checked":""}> 60-second speed round</label>`,
+  bindCtrl(){const t=$("spT");if(t)t.onchange=()=>{t.checked?startSpeed():stopSpeed(true)}},
+  draw(){$("stage").innerHTML=`<div class="tiles"><div class="tile" style="cursor:default"><span class="n">A</span><div class="s" style="${ff(L.name)}">${esc(caseFor(L,word))}</div><span class="cap" id="capA"></span></div><div class="tile" style="cursor:default"><span class="n">B</span><div class="s" style="${ff(Rr.name)}">${esc(caseFor(Rr,word))}</div><span class="cap" id="capB"></span></div></div>`;radioOpts(opts,{grid:true})},
+  check(){const s=selIdx(),ok=opts[s].ok,p=award(ok,speed?3:5);markOpts(i=>opts[i].ok,s);$("capA").textContent=L.name;$("capB").textContent=Rr.name;if(speed){speed.n++;if(ok)speed.right++}
+   const a1=FN[pr[0]],b1=FN[pr[1]];
+   return{ok,pts:p,hl:["story","terminal","aperture"],title:same?`Both are ${a.name}`:`${L.name} vs ${Rr.name}`,html:same?`<p>Both specimens are <b>${esc(a.name)}</b>. Its near-twin is ${esc(pr.find(n=>n!==a.name))}.</p>`:`<p><b>${esc(a1.name)}:</b> ${esc(a1.clue)}</p><p><b>${esc(b1.name)}:</b> ${esc(b1.clue)}</p>`,miss:{t:same?`Same: ${a.name}`:`${L.name} vs ${Rr.name}`,fix:same?"They were identical":"They were different"}}}}
+}
+function startSpeed(){speed={end:Date.now()+60000,n:0,right:0};$("timerWrap").hidden=false;tickSpeed();newRound()}
+function tickSpeed(){if(!speed)return;const left=Math.max(0,speed.end-Date.now());$("timerBar").style.width=(left/600)+"%";if(left<=0)return stopSpeed(false);requestAnimationFrame(tickSpeed)}
+function stopSpeed(silent){const s=speed;speed=null;$("timerWrap").hidden=true;if(!s||silent){newRound();return}
+ R&&(R.answered=true);$("fs").hidden=true;$("checkBtn").hidden=true;$("nextBtn").hidden=false;$("nextBtn").textContent="Play again";
+ $("feedback").innerHTML=`<div class="verdict"><span class="pill xp">Time</span><span><b>${s.right}</b> correct out of ${s.n} in 60 seconds.</span></div><p class="muted">Speed rounds reward quick recognition. Turn the speed round off to study each pair slowly.</p>`;
+ $("nextBtn").onclick=()=>{$("nextBtn").onclick=next;startSpeed()}}
+
+/* ═════════ GAME 5 · RIGHT TYPE FOR THE JOB ═════════ */
+const JOBS=[
+ {piece:"Wedding invitation",text:"Maya & Luis",sub:"June 13, 2026 · Lakeside Pavilion",bg:"#FBF6EE",ink:"#3D2F28",o:[["Great Vibes",1,"Formal, flowing calligraphy matches a formal wedding."],["Pacifico",0,"Friendly and fun, but its casual surf-shop voice is wrong for a formal event."],["Bungee",0,"Heavy signage capitals read as loud and urban."]]},
+ {piece:"Law firm letterhead",text:"Hartwell & Park",sub:"Attorneys at Law",bg:"#FFFFFF",ink:"#1B2A3A",o:[["Libre Baskerville",1,"A transitional serif signals tradition and trust."],["Comfortaa",0,"Rounded, playful geometry undercuts a serious profession."],["Monoton",0,"Neon-style inline letters are decorative and hard to read."]]},
+ {piece:"Children's toy box",text:"Block Party!",sub:"Ages 3 and up",bg:"#FFD23F",ink:"#1C1C1C",o:[["Londrina Solid",1,"Chunky, hand-drawn shapes feel friendly and playful."],["Bodoni Moda",0,"Hairline strokes feel luxurious and fragile, not playful."],["Special Elite",0,"Worn typewriter letters feel gritty and old."]]},
+ {piece:"Esports team jersey",text:"Volt Raiders",sub:"Season 4",bg:"#0E0F1A",ink:"#7CF8FF",o:[["Chakra Petch",1,"Squared, techno letters suit a gaming brand."],["Great Vibes",0,"Formal calligraphy says wedding, not competition."],["Lora",0,"A calm text serif is too quiet for a team identity."]]},
+ {piece:"Bakery menu description",text:"Sourdough, rye, and seeded loaves baked every morning. Ask about today's pastries.",body:1,bg:"#FBF7EF",ink:"#2A211B",o:[["Lora",1,"A warm, readable text serif works at menu sizes."],["Monoton",0,"Decorative inline letters fall apart in a paragraph."],["Tangerine",0,"A narrow script with a tiny x-height is hard to read at small sizes."]]},
+ {piece:"Banking app message",text:"Your transfer of $250 to Riverside Rentals is complete.",body:1,bg:"#F5F7FB",ink:"#121826",o:[["Manrope",1,"A clean, modern sans stays clear on screens at small sizes."],["Rye",0,"Western wood type is a novelty voice, wrong for finance."],["Cormorant",0,"A delicate display Garamond turns spindly at small screen sizes."]]},
+ {piece:"Western film festival poster",text:"High Noon Film Fest",sub:"Three nights under the stars",bg:"#F2DEC0",ink:"#4A2412",o:[["Rye",1,"Western wood-type letters set the theme instantly."],["Quicksand",0,"Soft, rounded geometry feels modern and gentle."],["Great Vibes",0,"Formal script feels romantic, not frontier."]]},
+ {piece:"Retro arcade night flyer",text:"Arcade Night",sub:"Free play · Friday 7 PM",bg:"#120A2A",ink:"#FFE14D",o:[["Press Start 2P",1,"Pixel letters come straight from 8-bit games."],["Playfair Display",0,"High-contrast elegance feels like a fashion magazine."],["Nunito",0,"Friendly and clean, but it doesn't say arcade."]]},
+ {piece:"Luxury perfume ad",text:"Noir Parfum",sub:"Eau de parfum",bg:"#F4EFE9",ink:"#141414",o:[["Bodoni Moda",1,"Didone contrast is the classic voice of fashion and luxury."],["Bungee",0,"Blocky signage letters feel loud and urban."],["Caveat",0,"Casual handwriting feels like a sticky note."]]},
+ {piece:"Hospital wayfinding sign",text:"Emergency →",sub:"Radiology · Level 2",bg:"#0B5394",ink:"#FFFFFF",o:[["Fira Sans",1,"Open humanist shapes stay clear from a distance and at an angle."],["Lobster",0,"Connected script slows reading when people are in a hurry."],["Monoton",0,"Inline strokes blur at a distance."]]},
+ {piece:"Newspaper article",text:"The council voted 6–1 on Tuesday to fund protected bike lanes along Wayne Street, with construction set to begin in June.",body:1,bg:"#F6F3EC",ink:"#1C1C1C",o:[["PT Serif",1,"A sturdy text serif made for long reading."],["Abril Fatface",0,"An ultra-heavy display face is tiring as body text."],["Bebas Neue",0,"All-caps condensed letters are hard to read in paragraphs."]]},
+ {piece:"Surf festival poster",text:"Surf Fest",sub:"Harbor Beach · August",bg:"#18A7B5",ink:"#FFFFFF",o:[["Pacifico",1,"A brushy, casual script has a beach voice."],["Libre Baskerville",0,"Traditional and bookish, too formal for the beach."],["Black Ops One",0,"A military stencil feels aggressive."]]},
+ {piece:"Early-reader picture book",text:"Pip found a red kite stuck high up in the old oak tree.",body:1,bg:"#FFFFFF",ink:"#1C1C1C",o:[["Lexend",1,"Designed for reading fluency, with open, clear shapes."],["Fredericka the Great",0,"Sketchy engraved capitals aren't made for reading."],["Great Vibes",0,"Script is hard for new readers to decode."]]}
+];
+function jobRound(){
+ const j=pick(JOBS),o=shuffle(j.o),best=o.findIndex(x=>x[1]);
+ return{type:"job",fonts:o.map(x=>x[0]),label:"Right Type for the Job",title:`Which typeface fits the ${j.piece.toLowerCase()}?`,piece:"Same content, three typefaces. Choose the one whose voice and readability suit the job.",ctrl:()=>"",bindCtrl(){},
+  draw(){$("stage").innerHTML=`<div class="jobs" role="radiogroup" aria-label="Options">${o.map(([n],i)=>`<label class="job" id="j${i}"><input type="radio" name="o" value="${i}"><span class="n" style="color:${j.ink}">${i+1}</span><div class="mock" style="background:${j.bg};color:${j.ink}"><span class="ctx">${esc(j.piece)}</span>${j.body?`<div class="b" style="${ff(n)}">${esc(j.text)}</div>`:`<div class="h" style="${ff(n)}">${esc(caseFor(FN[n],j.text))}</div><div style="font:400 13px/1.3 var(--ui)">${esc(j.sub)}</div>`}</div><span class="why" hidden></span></label>`).join("")}</div>`;
+   $("stage").querySelectorAll('input[name="o"]').forEach(r=>r.onchange=()=>$("checkBtn").disabled=false)},
+  check(){const s=selIdx(),ok=s===best,p=award(ok,10);o.forEach(([n,g,w],i)=>{const el=$("j"+i);el.querySelector("input").disabled=true;if(i===best)el.classList.add("right");else if(i===s)el.classList.add("wrong");const wy=el.querySelector(".why");wy.hidden=false;wy.innerHTML=`<b>${esc(n)}</b> · ${esc(w)}`});
+   return{ok,pts:p,hl:[FN[o[best][0]].cls],title:`${o[best][0]} fits the job`,html:`<p>${esc(o[best][2])}</p><p class="muted">Typefaces have a voice. Match it to the audience and message, then check that it stays readable at the size it will be used.</p>`,miss:{t:j.piece,fix:o[best][0]}}}}
+}
+
+/* ═════════ GAME 6 · PAIRING LAB ═════════ */
+const PAIRS=[
+ {h:"Playfair Display",head:"The Art of Slow Travel",o:[["Lato",1,"A clean humanist sans contrasts with the high-contrast serif without competing."],["Abril Fatface",0,"Two high-contrast display serifs fight for attention."],["Pacifico",0,"A casual script is hard to read as body text and clashes in voice."]]},
+ {h:"Montserrat",head:"Built for Small Teams",o:[["Merriweather",1,"A sturdy text serif contrasts with the geometric sans headline."],["Poppins",0,"Two geometric sans faces are too similar: no contrast, no reason to pair."],["Monoton",0,"An inline display face can't be read as paragraphs."]]},
+ {h:"Abril Fatface",head:"Summer Reading List",o:[["Poppins",1,"A calm geometric sans lets the heavy Didone headline lead."],["Playfair Display",0,"Two Didones compete; neither leads."],["Special Elite",0,"Typewriter texture adds a third, unrelated voice."]]},
+ {h:"Roboto Slab",head:"Field Notes: Week Three",o:[["Roboto",1,"A superfamily pairing: same skeleton, clear contrast between slab and sans."],["Arvo",0,"Two slabs look like a mistake rather than a choice."],["Great Vibes",0,"Formal script is unreadable at body size."]]},
+ {h:"Lobster",head:"Sunday Pancake Breakfast",o:[["Cabin",1,"A quiet humanist sans balances a loud script headline."],["Pacifico",0,"Two bold scripts compete and blur together."],["Bungee",0,"Heavy signage capitals add a second loud voice."]]},
+ {h:"Cinzel Decorative",head:"A Midsummer Night's Dream",o:[["EB Garamond",1,"A classic old style suits the Roman capitals and reads well in paragraphs."],["Rye",0,"Western wood type clashes with a classical theme."],["Bebas Neue",0,"Condensed all-caps text is hard to read in paragraphs."]]},
+ {h:"League Spartan",head:"Design Week 2026",o:[["Libre Baskerville",1,"A transitional serif gives classic contrast to a bold geometric headline."],["Josefin Sans",0,"Two geometric sans faces offer little contrast."],["Press Start 2P",0,"Pixel type is a novelty; it can't carry body text."]]},
+ {h:"DM Serif Display",head:"Kitchen Stories",o:[["DM Sans",1,"Designed as companions: shared proportions, clear serif/sans contrast."],["Bodoni Moda",0,"Two high-contrast serifs compete."],["Kaushan Script",0,"Energetic brush script is hard to read at body size."]]}
+];
+const BODY="Good pairings give each typeface one job. The headline sets the voice, and the body face stays quiet enough to read for a long time.";
+function pairRound(){
+ const pr=pick(PAIRS),o=shuffle(pr.o),best=o.findIndex(x=>x[1]),H=FN[pr.h];
+ return{type:"pair",fonts:[pr.h,...o.map(x=>x[0])],label:"Pairing Lab",title:`Which body face pairs best with ${pr.h}?`,piece:"The headline typeface is fixed. Choose the body typeface that gives contrast without competing.",ctrl:()=>"",bindCtrl(){},
+  draw(){$("stage").innerHTML=`<div class="jobs" role="radiogroup" aria-label="Options">${o.map(([n],i)=>`<label class="job" id="j${i}"><input type="radio" name="o" value="${i}"><span class="n" style="color:#555">${i+1}</span><div class="mock" style="background:#fff;color:#161616;text-align:left;justify-content:flex-start"><div class="h" style="${ff(pr.h)};font-size:28px">${esc(caseFor(H,pr.head))}</div><div class="b" style="${ff(n)};font-size:15px">${esc(caseFor(FN[n],BODY))}</div></div><span class="why" hidden></span></label>`).join("")}</div>`;
+   $("stage").querySelectorAll('input[name="o"]').forEach(r=>r.onchange=()=>$("checkBtn").disabled=false)},
+  check(){const s=selIdx(),ok=s===best,p=award(ok,10);o.forEach(([n,g,w],i)=>{const el=$("j"+i);el.querySelector("input").disabled=true;if(i===best)el.classList.add("right");else if(i===s)el.classList.add("wrong");const wy=el.querySelector(".why");wy.hidden=false;wy.innerHTML=`<b>${esc(n)}</b> · ${esc(w)}`});
+   return{ok,pts:p,hl:[H.cls,FN[o[best][0]].cls],title:`${pr.h} + ${o[best][0]}`,html:`<p>${esc(o[best][2])}</p><p class="muted">A reliable rule: pair faces that differ clearly in structure (serif with sans, display with text) but share a similar mood.</p>`,miss:{t:`Pair for ${pr.h}`,fix:o[best][0]}}}}
+}
+
+/* ═════════ FIELD GUIDE ═════════ */
+let gio=null;
+function renderGuide(){
+ const sel=$("gClass");if(!sel.options.length)sel.innerHTML=`<option value="">All classes (${F.length})</option>`+Object.entries(CL).map(([k,c])=>`<option value="${k}">${c.n} (${F.filter(f=>f.cls===k).length})</option>`).join("");
+ const q=$("gSearch").value.trim().toLowerCase(),k=sel.value,list=F.filter(f=>(!k||f.cls===k)&&(!q||f.name.toLowerCase().includes(q)));
+ $("gCount").textContent=`${list.length} shown · ${Object.keys(P.ids).length} identified`;
+ const tw=n=>TWINS.filter(p=>p.includes(n)).map(p=>p.find(x=>x!==n));
+ $("guide").innerHTML=list.map(f=>`<div class="gcard" id="g-${f.name.replace(/\W/g,"")}" data-f="${esc(f.name)}"><div class="gs" style="${ff(f.name)}">${esc(caseFor(f,"Rag"))}</div><div class="gs2" style="${ff(f.name)}">${esc(caseFor(f,"Hamburgefonstiv"))}</div>
+  <div class="gn"><span>${esc(f.name)}</span>${P.ids[f.name]?'<span class="ok">✓</span>':""}</div><div class="gc">${CL[f.cls].n}${f.alts.length?" · also "+f.alts.map(a=>CL[a].n).join(", "):""}</div><p>${esc(f.clue)}</p>${tw(f.name).map(t=>`<button type="button" data-twin="${esc(t)}">Compare: ${esc(t)}</button> `).join("")}</div>`).join("");
+ gio&&gio.disconnect();gio=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){loadFont(e.target.dataset.f);gio.unobserve(e.target)}}),{rootMargin:"200px"});
+ $("guide").querySelectorAll(".gcard").forEach(c=>gio.observe(c));
+ $("guide").querySelectorAll("[data-twin]").forEach(b=>b.onclick=()=>{$("gClass").value="";$("gSearch").value="";renderGuide();const el=$("g-"+b.dataset.twin.replace(/\W/g,""));if(el){el.scrollIntoView({block:"center",behavior:reduced?"auto":"smooth"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1600)}})}
+$("gClass").onchange=renderGuide;$("gSearch").oninput=renderGuide;
+
+/* ═════════ ROUND RUNNER ═════════ */
+const GEN={classify:()=>classifyRound(),zoom:zoomRound,odd:oddRound,same:sameRound,job:jobRound,pair:pairRound};
+async function newRound(){
+ const my=++token,type=chall?chall.list[chall.i]:tab;
+ R=type==="classify"&&chall?classifyRound(2):GEN[type]();R.answered=false;
+ $("caseLabel").textContent=chall?`Challenge · question ${chall.i+1} of ${chall.n}`:R.label;$("progress").textContent=chall?`Score ${chall.score}`:speed?`${speed.right} correct`:"";
+ $("caseTitle").textContent=R.title;$("piece").textContent=R.piece;$("termChip").hidden=true;
+ $("ctrl").innerHTML=R.ctrl();$("ctrl").hidden=!$("ctrl").innerHTML.trim();R.bindCtrl();
+ $("fs").hidden=true;$("opts").innerHTML="";$("feedback").innerHTML="";$("status").textContent="";
+ $("checkBtn").hidden=!!speed;$("checkBtn").disabled=true;$("nextBtn").hidden=true;$("nextBtn").onclick=next;
+ $("stage").innerHTML=loadingHTML;document.querySelectorAll(".term.on").forEach(t=>t.classList.remove("on"));
+ const ok=await ensure(R.fonts);if(my!==token)return;
+ if(!ok){$("stage").innerHTML=failHTML();$("retryBtn").onclick=()=>newRound();return}
+ R.draw();
+}
+function check(){
+ if(!R||R.answered||selIdx()<0)return;const res=R.check();R.answered=true;
+ $("caseTitle").textContent=res.title||R.title;const c=CL[res.hl[0]];if(c){$("termChip").textContent=c.n;$("termChip").hidden=false}highlight(res.hl);
+ $("feedback").innerHTML=`<div class="verdict">${res.ok?'<span class="pill ok">Correct</span>':'<span class="pill no">Not quite</span>'}${res.pts?`<span class="pill xp">+${res.pts} XP</span>`:""}${P.streak>=3&&res.ok?`<span class="pill xp">Streak ${P.streak}</span>`:""}</div>${res.html}`;
+ if(chall){if(res.ok)chall.score++;else chall.missed.push(res.miss);$("progress").textContent=`Score ${chall.score}`}
+ if(speed){$("progress").textContent=`${speed.right} correct`;setTimeout(()=>{if(speed)newRound()},650);return}
+ $("checkBtn").hidden=true;$("nextBtn").hidden=false;$("nextBtn").textContent=chall&&chall.i+1>=chall.n?"See results":"Next";$("nextBtn").focus({preventScroll:true});
+}
+function next(){if(chall){if(chall.i+1>=chall.n)return results();chall.i++}newRound();const r=$("play").getBoundingClientRect();if(r.top<0)$("play").scrollIntoView({block:"start",behavior:reduced?"auto":"smooth"})}
+
+/* ═════════ CHALLENGE ═════════ */
+const CT=["classify","zoom","odd","same","job","pair"];
+function renderSetup(){$("lengths").innerHTML=[[12,2],[18,3],[30,5]].map(([n,k])=>`<button type="button" data-n="${n}"><b>${n}</b><small>${k} of each game</small></button>`).join("");$("lengths").querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>startChallenge(+b.dataset.n))}
+function startChallenge(n){const k=n/6;chall={n,i:0,score:0,missed:[],list:shuffle(CT.flatMap(t=>Array(k).fill(t)))};$("setup").hidden=true;$("play").hidden=false;$("results").hidden=true;newRound()}
+function results(){const c=chall,pct=Math.round(c.score/c.n*100);chall=null;$("play").hidden=true;
+ $("results").innerHTML=`<p class="meta" style="margin:0">Challenge complete</p><div class="big">${c.score} / ${c.n}</div><p class="muted" style="margin:0">${pct}% correct · points were doubled</p>`+
+ (c.missed.length?`<h2 style="margin-top:20px;font-size:20px">Review these</h2><ul class="missed">${c.missed.map(m=>`<li><b>${esc(m.t)}</b><small>${esc(m.fix)}</small></li>`).join("")}</ul><p class="muted" style="margin-top:10px">Look each face up in the Field Guide and compare it with its near-twin.</p>`:`<p style="margin-top:14px">Every answer correct.</p>`)+
+ `<div class="actions"><button type="button" class="primary" id="againBtn">New challenge</button><button type="button" class="secondary" id="guideBtn">Open the Field Guide</button></div>`;
+ $("results").hidden=false;$("againBtn").onclick=()=>setTab("challenge");$("guideBtn").onclick=()=>setTab("guide")}
+
+function setTab(t){tab=t;chall=null;if(speed){speed=null;$("timerWrap").hidden=true}token++;
+ document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tab===t));
+ $("results").hidden=true;$("setup").hidden=t!=="challenge";$("guideSec").hidden=t!=="guide";$("play").hidden=t==="challenge"||t==="guide";
+ if(t==="challenge")renderSetup();else if(t==="guide")renderGuide();else newRound()}
+
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+$("checkBtn").onclick=check;$("nextBtn").onclick=next;
+$("resetBtn").onclick=()=>{P={xp:0,streak:0,best:0,ids:{}};save();renderRank();if(tab==="guide")renderGuide()};
+renderRank();renderTerms();setTab("classify");
+</script>
+
+</body>
+</html>

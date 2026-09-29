@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Color Detective: learn the RYB color wheel, color relationships, and strategic color use in graphic design through games and real design cases.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23E0262F'/%3E%3Cpath d='M32 2a30 30 0 0 1 26 45L32 32z' fill='%23FFE11A'/%3E%3Cpath d='M58 47A30 30 0 0 1 6 47l26-15z' fill='%232459B5'/%3E%3C/svg%3E">
+<style>html,body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Color Detective</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:wght@500;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Source+Serif+4:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: masthead with rank meter, activity tabs, then the activity card beside a sticky vocabulary rail. Artboards and the wheel show real colors, so they are fixed; the chrome follows the theme. */
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --stage:#d9dee6; --paste:#c9cfd8; --ink:#17202b; --muted:#5a6574; --line:#d3d9e1;
+  --pencil:#2f62c9; --pencil-soft:#e2eafb;
+  --good:#1e7547; --good-soft:#e3f3ea; --bad:#b3261e; --bad-soft:#fbe8e6;
+  --display:"Newsreader",Georgia,serif; --ui:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11151b; --surface:#19202a; --stage:#0b0e12; --paste:#2a313b; --ink:#e6eaf0; --muted:#9aa5b3; --line:#2b3441;
+  --pencil:#86a8ff; --pencil-soft:#1e2a44; --good:#62c994; --good-soft:#15301f; --bad:#ff8d84; --bad-soft:#3a1d1b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11151b; --surface:#19202a; --stage:#0b0e12; --paste:#2a313b; --ink:#e6eaf0; --muted:#9aa5b3; --line:#2b3441;
+  --pencil:#86a8ff; --pencil-soft:#1e2a44; --good:#62c994; --good-soft:#15301f; --bad:#ff8d84; --bad-soft:#3a1d1b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--ui)}
+.wrap{max-width:1260px;margin:0 auto;padding-inline:clamp(16px,3vw,32px);padding-block:24px 48px}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--pencil);outline-offset:2px}
+
+.mast{display:flex;flex-wrap:wrap;gap:16px 32px;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:18px}
+.kicker{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--pencil);margin:0 0 10px}
+h1{font:600 clamp(32px,5vw,46px)/1.02 var(--display);letter-spacing:-.01em;margin:0 0 10px}
+.lede{margin:0;max-width:64ch;color:var(--muted)}
+.rank{min-width:240px;display:grid;gap:6px}
+.rank .rn{display:flex;justify-content:space-between;gap:10px;font-weight:600}
+.rank .rn span:last-child{font:500 12px/1.6 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{height:8px;background:var(--line);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#e0262f,#ff8514,#ffe11a,#2da046,#2459b5,#7b2d96);transition:width .4s}
+.rank small{color:var(--muted);font-size:12.5px}
+
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.tabs button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 16px;font-weight:600;color:var(--muted)}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:24px;align-items:start}
+main{min-width:0;display:grid;gap:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:clamp(16px,2.4vw,24px);min-width:0}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font:500 12px/1.2 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.titleRow{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;margin:8px 0 6px}
+h2{font:600 24px/1.2 var(--display);margin:0;text-wrap:balance}
+.piece{margin:0 0 14px;color:var(--muted);font-size:14.5px}
+.chip{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:999px;background:var(--pencil-soft);color:var(--pencil)}
+
+.ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 12px;font-size:13px;color:var(--muted)}
+.ctrl .lbl{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.mini{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.mini button{border:0;background:var(--surface);padding:6px 10px;font-size:12.5px;font-weight:500;color:var(--muted)}
+.mini button+button{border-left:1px solid var(--line)}
+.mini button[aria-pressed="true"]{background:var(--pencil-soft);color:var(--pencil)}
+.ctrl label.tg{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+
+.stageWrap{container:stage/inline-size;background:var(--stage);padding:14px;border-radius:8px}
+#stage.v-gray{filter:grayscale(1)}
+#stage.v-deut{filter:url(#f-deut)} #stage.v-prot{filter:url(#f-prot)} #stage.v-trit{filter:url(#f-trit)}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@container stage (max-width:600px){.compare{grid-template-columns:1fr}.split{grid-template-columns:1fr!important}}
+.frame{margin:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface);min-width:0}
+.frame figcaption{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font:500 12px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tag{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:4px;font-weight:600}
+.frame.bad .tag{background:var(--bad-soft);color:var(--bad)}
+.frame.good .tag{background:var(--good-soft);color:var(--good)}
+.paste{background:var(--paste);padding:18px}
+.fit{position:relative;width:100%}
+.art{position:absolute;top:0;left:0;transform-origin:0 0;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.25),0 6px 18px rgba(0,0,0,.12);font-family:"Source Sans 3","Helvetica Neue",Arial,sans-serif;color:#1c1c1c;text-align:left}
+.art *{margin:0}
+.ab{position:absolute}
+.compare.hinting .lk{outline:2px dashed #d61f8c;outline-offset:3px}
+.single{max-width:440px;margin:0 auto}
+.split{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;align-items:start}
+
+.wheelBox{display:grid;place-items:center;background:var(--surface);border-radius:8px;padding:12px}
+.wheelBox svg{width:min(100%,380px);height:auto;display:block}
+.wheelBox .wg{cursor:pointer}
+.wheelBox .wg:hover path{filter:brightness(1.08)}
+.wheelBox .wg:focus-visible{outline:none}
+.wheelBox .wg:focus-visible path{stroke:var(--ink);stroke-width:3}
+.swatches{display:flex;gap:6px;margin-top:10px;justify-content:center;flex-wrap:wrap}
+.swatches span{width:46px;height:46px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.swatches+p{margin:6px 0 0;text-align:center;font-size:12px;color:var(--muted)}
+
+.meter{background:var(--surface);border-radius:8px;padding:16px;display:grid;gap:12px}
+.ratio{font:600 44px/1 var(--display);font-variant-numeric:tabular-nums}
+.ratio small{font:500 13px/1 var(--mono);color:var(--muted);margin-left:6px}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pass,.fail{font:600 11px/1 var(--mono);letter-spacing:.04em;padding:6px 8px;border-radius:999px}
+.pass{background:var(--good-soft);color:var(--good)} .fail{background:var(--bad-soft);color:var(--bad)}
+.meter input[type=range]{width:100%;accent-color:var(--pencil)}
+.meter .ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.hexes{font:400 12.5px/1.5 var(--mono);color:var(--muted)}
+
+.hintRow{display:flex;justify-content:flex-end;margin-top:10px}
+.ghost{background:none;border:1px solid var(--line);border-radius:6px;padding:7px 12px;font-size:13px;font-weight:500;color:var(--muted)}
+.ghost[aria-pressed="true"]{border-color:var(--pencil);color:var(--pencil)}
+
+fieldset{border:0;padding:0;margin:18px 0 0;min-width:0}
+legend{font-weight:600;margin-bottom:10px;padding:0}
+.opts{display:grid;gap:8px}
+.opt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;align-items:start;padding:12px 14px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:pointer}
+.opt input{margin:3px 0 0;accent-color:var(--pencil);width:17px;height:17px}
+.opt:has(input:checked){border-color:var(--pencil);box-shadow:inset 0 0 0 1px var(--pencil)}
+.opt.right{border-color:var(--good);background:var(--good-soft);box-shadow:none}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);box-shadow:none}
+.opt.locked{cursor:default}
+.why{grid-column:2;font-size:13.5px;color:var(--muted)}
+.why b{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;margin-right:6px}
+.opt.right .why b{color:var(--good)} .opt .why b.no{color:var(--bad)}
+
+#feedback:empty{display:none}
+#feedback{margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-radius:8px;display:grid;gap:8px}
+.verdict{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+.pill{font:600 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:999px}
+.pill.ok{background:var(--good-soft);color:var(--good)} .pill.no{background:var(--bad-soft);color:var(--bad)} .pill.xp{background:var(--pencil-soft);color:var(--pencil)}
+.diff{font-family:var(--mono);font-size:13px;background:var(--stage);padding:8px 10px;border-radius:6px;font-variant-numeric:tabular-nums;overflow-x:auto}
+.diff span{color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:11px;margin-right:8px}
+#feedback p{margin:0}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;align-items:center}
+.primary{background:var(--ink);color:var(--bg);border:0;border-radius:7px;padding:11px 20px;font-weight:600}
+.primary:disabled{opacity:.4;cursor:not-allowed}
+.secondary{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:10px 18px;font-weight:600}
+.status{font-size:13px;color:var(--muted)}
+.lengths{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.lengths button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:14px 22px;min-width:110px;text-align:left}
+.lengths b{display:block;font:600 26px/1 var(--display)}
+.lengths small{color:var(--muted)}
+.muted{color:var(--muted)}
+.big{font:600 64px/1 var(--display);margin:10px 0 4px;font-variant-numeric:tabular-nums}
+.missed{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:8px}
+.missed li{border:1px solid var(--line);border-radius:7px;padding:10px 12px}
+.missed small{display:block;color:var(--muted)}
+select{padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--surface);max-width:100%}
+
+.vocab{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.vocab h2{font-size:20px}
+.vocab>p{font-size:12.5px;color:var(--muted);margin:6px 0 10px}
+.group{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--pencil);margin:14px 0 6px}
+.terms{display:grid;gap:4px}
+.term{border:1px solid transparent;border-radius:7px;padding:7px 9px;transition:background .2s}
+.term .tn{display:flex;justify-content:space-between;gap:8px;font-weight:600;font-size:13.5px}
+.term .tp{font:500 11px/1.6 var(--mono);color:var(--muted);white-space:nowrap}
+.term .td{display:block;margin-top:2px;font-size:12.5px;line-height:1.45;color:var(--muted)}
+.term .ad{display:block;margin-top:3px;font:500 11px/1.4 var(--mono);color:var(--pencil)}
+.term .sw{display:flex;gap:3px;margin-top:5px}
+.term .sw i{width:16px;height:16px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.term.on{background:var(--pencil-soft);border-color:var(--pencil)}
+.reset{margin-top:12px;background:none;border:0;padding:0;font-size:12px;color:var(--muted);text-decoration:underline}
+.colophon{margin-top:28px;font-size:12px;color:var(--muted);max-width:90ch}
+@media (max-width:980px){.layout{grid-template-columns:1fr}.vocab{position:static;max-height:none}.terms{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="f-deut" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="0.367322 0.860646 -0.227968 0 0  0.280085 0.672501 0.047413 0 0  -0.011820 0.042940 0.968881 0 0  0 0 0 1 0"/></filter>
+  <filter id="f-prot" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="0.152286 1.052583 -0.204868 0 0  0.114503 0.786281 0.099216 0 0  -0.003882 -0.048116 1.051998 0 0  0 0 0 1 0"/></filter>
+  <filter id="f-trit" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="1.255528 -0.076749 -0.178779 0 0  -0.078411 0.930809 0.147602 0 0  0.004733 0.691367 0.303900 0 0  0 0 0 1 0"/></filter>
+</svg>
+
+<div class="wrap">
+  <a href="../" style="display:inline-block;margin:0 0 14px;font:500 13px/1 'IBM Plex Sans',system-ui,sans-serif;color:var(--pencil);text-decoration:none">← All Design Detective apps</a>
+<header class="mast">
+    <div>
+      <p class="kicker">Color as an element · color as a strategy</p>
+      <h1>Color Detective</h1>
+      <p class="lede">Learn the RYB color wheel, name color relationships, and diagnose color problems in real design work. Every answer earns points toward your next rank.</p>
+    </div>
+    <div class="rank" aria-live="polite">
+      <div class="rn"><span id="rankName">Swatch Rookie</span><span id="xpText">0 XP</span></div>
+      <div class="bar"><i id="xpBar"></i></div>
+      <small id="streakText">Streak 0 · Best 0</small>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Activities">
+    <button type="button" data-tab="wheel" aria-pressed="true">1 · Wheel Lab</button>
+    <button type="button" data-tab="harmony" aria-pressed="false">2 · Name the Harmony</button>
+    <button type="button" data-tab="detective" aria-pressed="false">3 · Color Detective</button>
+    <button type="button" data-tab="contrast" aria-pressed="false">4 · Contrast Repair</button>
+    <button type="button" data-tab="challenge" aria-pressed="false">Challenge</button>
+  </nav>
+
+  <div class="layout">
+    <main>
+      <section id="setup" class="card" hidden>
+        <h2>Challenge mode</h2>
+        <p class="muted" style="margin:6px 0 0">A mixed test: wheel questions, harmonies, and Color Detective cases. No hints and no color names on the wheel. Double points.</p>
+        <div id="lengths" class="lengths"></div>
+      </section>
+
+      <section id="play" class="card">
+        <div class="meta"><span id="caseLabel"></span><span id="progress"></span></div>
+        <div class="titleRow"><h2 id="caseTitle"></h2><span id="termChip" class="chip" hidden></span></div>
+        <p id="piece" class="piece"></p>
+        <div id="ctrl" class="ctrl"></div>
+        <div class="stageWrap"><div id="stage"></div></div>
+        <div id="hintRow" class="hintRow" hidden><button id="hintBtn" type="button" class="ghost" aria-pressed="false">Show where to look</button></div>
+        <fieldset id="fs" hidden>
+          <legend id="legend"></legend>
+          <div id="opts" class="opts"></div>
+        </fieldset>
+        <div id="feedback" aria-live="polite"></div>
+        <div class="actions">
+          <button id="checkBtn" type="button" class="primary" disabled>Check answer</button>
+          <button id="nextBtn" type="button" class="primary" hidden>Next</button>
+          <span id="status" class="status"></span>
+        </div>
+      </section>
+
+      <section id="results" class="card" hidden></section>
+    </main>
+
+    <aside class="vocab" aria-labelledby="vocabHead">
+      <h2 id="vocabHead">Color Vocabulary</h2>
+      <p>The term behind each answer is highlighted. Adobe Color's name for a rule is shown in blue where it differs.</p>
+      <div id="terms"></div>
+      <button id="resetBtn" type="button" class="reset">Reset my points and progress</button>
+    </aside>
+  </div>
+  <p class="colophon">Relationships are taught on the traditional RYB (red, yellow, blue) painter's wheel. Screen tools that use an RGB wheel place some complements differently: on an RGB wheel, blue's complement is yellow rather than orange. Color-blindness views use the Machado (2009) simulation and are approximations. Names and places in the examples are fictional.</p>
+</div>
+
+<script>
+/* ═════════ COLOR MATH ═════════ */
+const RYB=[["Yellow","Y","#FFE11A"],["Yellow-Orange","YO","#FFB319"],["Orange","O","#FF8514"],["Red-Orange","RO","#F2541B"],["Red","R","#E0262F"],["Red-Violet","RV","#B5236F"],["Violet","V","#7B2D96"],["Blue-Violet","BV","#4B3AA8"],["Blue","B","#2459B5"],["Blue-Green","BG","#129489"],["Green","G","#2DA046"],["Yellow-Green","YG","#9CCB2B"]];
+const md=i=>((i%12)+12)%12, hx=i=>RYB[md(i)][2], nm=i=>RYB[md(i)][0];
+const toRGB=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const toHex=a=>"#"+a.map(v=>Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,"0")).join("").toUpperCase();
+const mix=(a,b,t)=>{const x=toRGB(a),y=toRGB(b);return toHex(x.map((v,i)=>v+(y[i]-v)*t))};
+const tint=(h,t)=>mix(h,"#FFFFFF",t), shade=(h,t)=>mix(h,"#000000",t), tone=(h,t)=>mix(h,"#808080",t);
+const lum=h=>{const c=toRGB(h).map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*c[0]+.7152*c[1]+.0722*c[2]};
+const ratio=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
+const cr=(a,b)=>ratio(a,b).toFixed(1)+":1";
+const onColor=h=>lum(h)>.36?"#161616":"#FFFFFF";
+
+/* ═════════ VOCABULARY ═════════ */
+const VOCAB=[
+ ["The RYB wheel",[
+  ["primary","Primary colors","On the RYB wheel: red, yellow, and blue. They can't be mixed from other hues; every other hue is mixed from them.","",[0,4,8]],
+  ["secondary","Secondary colors","Orange, violet, and green: each is mixed from two primaries and sits halfway between them.","",[2,6,10]],
+  ["tertiary","Tertiary colors","A primary mixed with its neighboring secondary: yellow-orange, red-orange, red-violet, blue-violet, blue-green, yellow-green.","",[1,3,5,7,9,11]],
+  ["models","Color models","RYB is the painter's wheel used to teach relationships. RGB is light on screens; CMYK is ink in print. Primaries and complements differ between them.","",null]]],
+ ["Color properties",[
+  ["hue","Hue","The color family itself: red, blue-green, violet.","",null],
+  ["value","Value","How light or dark a color is. Value does most of the work in readability and hierarchy.","",null],
+  ["saturation","Saturation (chroma)","How intense or muted a color is. Saturated colors pull attention; muted colors recede.","",null],
+  ["tint","Tint, shade & tone","Tint: a hue plus white. Shade: plus black. Tone: plus gray. All three keep the same hue.","",null],
+  ["temperature","Temperature","Warm hues (reds, oranges, yellows) seem to advance; cool hues (blues, greens, violets) seem to recede.","",null],
+  ["neutral","Neutrals","White, black, gray, and near-neutrals like cream. They support a palette and don't count toward a harmony.","",null]]],
+ ["Color relationships",[
+  ["mono","Monochromatic","One hue in several tints, shades, and tones. Unified and calm; hierarchy must come from value.","Adobe Color: Monochromatic · also compare Shades",[0]],
+  ["analog","Analogous","Three neighboring hues on the wheel. Harmonious; needs value contrast to stay distinct.","Adobe Color: Analogous",[11,0,1]],
+  ["comp","Complementary","Two hues directly opposite each other. Maximum hue contrast; best when one dominates.","Adobe Color: Complementary",[0,6]],
+  ["split","Split-complementary","A base hue plus the two hues on either side of its complement. Contrast with less tension.","Adobe Color: Split Complementary",[0,5,7]],
+  ["triad","Triadic","Three hues evenly spaced, every fourth step on a 12-step wheel. Lively; let one hue lead.","Adobe Color: Triad",[0,4,8]],
+  ["square","Square","Four hues evenly spaced, every third step. Rich but busy; control the proportions.","Adobe Color: Square",[0,3,6,9]],
+  ["rect","Tetradic (rectangle)","Two complementary pairs, two steps apart. Four hues that need one clear leader.","Adobe Color: no preset; build it with Custom",[0,2,6,8]]]],
+ ["Color in use",[
+  ["valuecontrast","Value contrast","Difference in lightness between text and background. Test it by viewing the design in grayscale.","",null],
+  ["ratio","Contrast ratio","WCAG measures value contrast from 1:1 to 21:1. Body text needs 4.5:1; large text needs 3:1.","",null],
+  ["emphasis","Emphasis","The most saturated or contrasting color should mark the most important element.","",null],
+  ["accent","Accent overload","One accent color guides the eye. Five accents compete, so nothing stands out.","",null],
+  ["proportion","Dominant, secondary & accent","Unequal amounts give a palette structure. 60/30/10 is a useful starting point, not a rule.","",null],
+  ["cvd","Meaning beyond color","About 1 in 12 men has a color vision deficiency. Pair color with labels, icons, or patterns.","",null],
+  ["vibrate","Vibrating colors","Saturated complements of similar value seem to shimmer at their edge. Separate them in value.","",null],
+  ["harmony","Color harmony","Colors chosen from a relationship on the wheel feel planned; unrelated hues feel random.","",null],
+  ["consistency","Color consistency","A brand color is one exact value everywhere. Near-matches look like mistakes.","",null],
+  ["surface","Reading surfaces","Body text needs a calm background: a light tint, a neutral, or an overlay on photos.","",null],
+  ["datacolor","Color in data","Ordered data uses one hue from light to dark; categories use distinct hues; highlight with one accent.","",null],
+  ["interactive","Interactive color","Links, buttons, and current states need a color (plus a cue) that shows they can be used.","",null],
+  ["darkmode","Dark mode color","On dark backgrounds, use lighter, less saturated versions of colors.","",null],
+  ["simultaneous","Simultaneous contrast","A color looks different depending on the colors around it. Always judge color in context.","",null]]]
+];
+const TERM={};VOCAB.forEach(([,list])=>list.forEach(t=>TERM[t[0]]=t));
+
+/* ═════════ DETECTIVE CASES ═════════ */
+const SE="'Source Serif 4',Georgia,serif",SA="'Source Sans 3','Helvetica Neue',Arial,sans-serif";
+const D=[
+/* VALUE CONTRAST */
+{issue:"valuecontrast",piece:"Festival poster",title:"Pale text on a pale background",
+ html:b=>{const t=b?"#F1E4A6":"#3B2412";return{w:300,h:400,bg:"#F7D6AE",body:`
+ <div class="ab lk" style="left:28px;top:30px;font:700 12px/1 ${SA};letter-spacing:.18em;color:${t}">RIVERSIDE ARTS</div>
+ <div class="ab lk" style="left:28px;top:54px;font:800 52px/.95 ${SA};color:${t}">SUMMER<br>SOUND<br>FEST</div>
+ <div class="ab" style="left:0;right:0;bottom:0;height:120px;background:#E8894A"></div>
+ <div class="ab lk" style="left:28px;bottom:34px;font:600 17px/1.4 ${SA};color:${t}">July 18–20<br>Riverside Park</div>`}},
+ yes:"Darkened the text so it contrasts in value with the background",
+ no:[["Changed the background to a different color","The peach background and orange band are the same in both."],["Made the text bolder","The text is the same weight in both."]],
+ diff:()=>`Headline contrast: ${cr("#F1E4A6","#F7D6AE")} → ${cr("#3B2412","#F7D6AE")}`,
+ why:"Hue and saturation catch the eye, but value (light against dark) is what makes text readable. Light text on a light background disappears."},
+{issue:"valuecontrast",piece:"Website promo banner",title:"Contrast in hue only",
+ html:b=>{const t=b?"#4A6FD0":"#F4F6FF";return{w:400,h:220,bg:"#D9583A",body:`
+ <div class="ab lk" style="left:28px;top:30px;font:700 12px/1 ${SA};letter-spacing:.16em;color:${t}">THIS WEEKEND ONLY</div>
+ <div class="ab lk" style="left:28px;top:52px;width:340px;font:800 38px/1.05 ${SA};color:${t}">30% off all art supplies</div>
+ <div class="ab" style="left:28px;top:156px;background:#1B2340;color:#fff;border-radius:6px;padding:10px 16px;font:600 13px/1 ${SA}">Shop the sale</div>`}},
+ yes:"Lightened the text so it differs from the background in value, not just hue",
+ no:[["Switched the background to blue","The background is the same red-orange in both."],["Increased the text size","The text is the same size in both."]],
+ diff:()=>`Headline contrast: ${cr("#4A6FD0","#D9583A")} → ${cr("#F4F6FF","#D9583A")}`,
+ why:"Blue and red-orange look very different, but they are close in value. Switch the view to Grayscale: the headline in A nearly vanishes. The grayscale test checks value contrast."},
+{issue:"valuecontrast",piece:"Newsletter sign-up form",title:"Labels you can barely see",
+ html:b=>{const t=b?"#C3C9D2":"#4A5260";const f=(l,p,y)=>`<div class="ab lk" style="left:28px;top:${y}px;font:600 12.5px/1 ${SA};color:${t}">${l}</div><div class="ab" style="left:28px;right:28px;top:${y+18}px;height:38px;border:1.5px solid #E3E6EA;border-radius:6px"></div><div class="ab lk" style="left:40px;top:${y+30}px;font:400 13px/1 ${SA};color:${t}">${p}</div>`;
+ return{w:320,h:330,bg:"#FFFFFF",body:`<div class="ab" style="left:28px;top:28px;font:700 22px/1.1 ${SE}">Join the newsletter</div>
+ <div class="ab lk" style="left:28px;top:60px;font:400 13px/1.3 ${SA};color:${t}">One email a month. No spam.</div>
+ ${f("Full name","Jordan Reyes",96)}${f("Email address","you@example.com",170)}
+ <div class="ab" style="left:28px;top:252px;background:#2459B5;color:#fff;border-radius:6px;padding:11px 18px;font:600 13px/1 ${SA}">Subscribe</div>`}},
+ yes:"Darkened the labels and helper text",
+ no:[["Darkened the input borders","The borders are the same pale gray in both."],["Changed the button color","The button is the same blue in both."]],
+ diff:()=>`Label contrast: ${cr("#C3C9D2","#FFFFFF")} → ${cr("#4A5260","#FFFFFF")}`,
+ why:"Light gray text looks clean but fails people in bright light, on older screens, or with low vision. Labels are instructions; they need at least 4.5:1."},
+
+/* EMPHASIS */
+{issue:"emphasis",piece:"App dialog",title:"The wrong button shouts",
+ html:b=>{const on=`background:#2459B5;color:#fff`,off=`background:#E6E8EC;color:#4A5260`;return{w:340,h:220,bg:"#8B93A1",body:`
+ <div class="ab" style="left:30px;right:30px;top:30px;bottom:30px;background:#fff;border-radius:12px"></div>
+ <div class="ab" style="left:52px;top:52px;font:700 18px/1.2 ${SA}">Save changes to “Poster v3”?</div>
+ <div class="ab" style="left:52px;top:82px;width:240px;font:400 13px/1.45 ${SA};color:#555">Your edits will be lost if you don't save them.</div>
+ <div class="ab lk" style="left:52px;top:136px;${b?on:off};border-radius:6px;padding:10px 16px;font:600 13px/1 ${SA}">Don't save</div>
+ <div class="ab lk" style="right:52px;top:136px;${b?off:on};border-radius:6px;padding:10px 22px;font:600 13px/1 ${SA}">Save</div>`}},
+ yes:"Moved the saturated color to the main action",
+ no:[["Made the Save button larger","Both buttons are the same size in both."],["Changed the blue to a warmer hue","B uses the same blue, just on the other button."]],
+ diff:"Saturated blue: “Don't save” → “Save”",
+ why:"The most saturated color marks what matters most. When it lands on the secondary action, people click the wrong button."},
+{issue:"emphasis",piece:"Concert poster",title:"Decoration louder than the details",
+ html:b=>{const c1=b?"#E0267A":"#3A4266",c2=b?"#FF8514":"#4A3B5C",t=b?"#5B6280":"#FFB319";return{w:300,h:400,bg:"#1B2340",body:`
+ <div class="ab lk" style="right:-40px;top:40px;width:200px;height:200px;border-radius:50%;background:${c1}"></div>
+ <div class="ab lk" style="left:-30px;top:180px;width:140px;height:140px;border-radius:50%;background:${c2}"></div>
+ <div class="ab" style="left:26px;top:30px;font:800 40px/.95 ${SA};color:#F4F1EA">NIGHT<br>SHIFT</div>
+ <div class="ab lk" style="left:26px;bottom:28px;font:700 17px/1.4 ${SA};color:${t}">Fri, Oct 9 · 9 PM<br>The Clyde Theatre</div>`}},
+ yes:"Muted the decorative circles and gave the event details the bright accent",
+ no:[["Enlarged the event details","The details are the same size in both."],["Changed the background color","The background is the same navy in both."]],
+ diff:"Circles: saturated → muted tones · Details: muted gray → bright yellow-orange",
+ why:"Saturation pulls the eye first. Spend it on the information people need, not on decoration."},
+{issue:"emphasis",piece:"Pricing page",title:"No plan stands out",
+ html:b=>{const P=[["Basic","$9"],["Studio","$29"],["Team","$59"]];return{w:420,h:260,bg:"#F5F7FB",body:`
+ <div class="ab" style="left:0;right:0;top:22px;text-align:center;font:700 20px/1 ${SA}">Choose a plan</div>
+ ${P.map(([n,p],i)=>{const hi=!b&&i===1,hc=hi?"#F2541B":"#8E9AAF";return `<div class="ab ${i===1?"lk":""}" style="left:${24+i*128}px;top:62px;width:116px;height:170px;background:#fff;border:1px solid ${hi?hc:"#DDE2EA"};border-radius:10px;overflow:hidden">
+ <div style="background:${hc};color:#fff;font:700 11px/1 ${SA};letter-spacing:.1em;padding:9px 12px">${n.toUpperCase()}</div>
+ <div style="padding:14px 12px;font:800 28px/1 ${SA}">${p}<span style="font:400 12px ${SA};color:#666">/mo</span></div>
+ <div style="margin:36px 12px 0;background:${hc};color:#fff;border-radius:6px;padding:8px 0;text-align:center;font:600 12px/1 ${SA}">Choose</div></div>`}).join("")}`}},
+ yes:"Gave the recommended plan the only saturated color",
+ no:[["Made the middle card larger","All three cards are the same size in both."],["Changed all three cards to orange","Only the middle card is orange in B."]],
+ diff:"Studio card: gray-blue → red-orange (others unchanged)",
+ why:"When every option looks the same, readers have to work out which one you recommend. One saturated color answers that at a glance."},
+
+/* ACCENT OVERLOAD */
+{issue:"accent",piece:"Blog article",title:"Five accent colors",
+ html:b=>{const k=b?["#E0262F","#2DA046","#7B2D96","#FF8514","#129489"]:["#0E7C74","#1C1C1C","#0E7C74","#0E7C74","#0E7C74"];return{w:320,h:380,bg:"#FFFFFF",body:`<div class="ab" style="left:28px;right:28px;top:28px">
+ <div class="lk" style="font:700 11px/1 ${SA};letter-spacing:.16em;color:${k[0]};margin-bottom:8px">DESIGN BASICS</div>
+ <div class="lk" style="font:700 24px/1.12 ${SE};color:${k[1]};margin-bottom:12px">Why Every Palette Needs a Leader</div>
+ <p style="font:400 14px/1.55 ${SE};color:#333;margin-bottom:12px">A palette works like a team. One color leads, a few support it, and the rest stay quiet. Read our <span class="lk" style="color:${k[2]};text-decoration:underline">guide to accent colors</span> to see it in action.</p>
+ <p class="lk" style="border-left:3px solid ${k[3]};padding-left:12px;font:italic 400 16px/1.4 ${SE};color:#333;margin-bottom:14px">“If everything is highlighted, nothing is.”</p>
+ <span class="lk" style="display:inline-block;border:1.5px solid ${k[4]};color:${k[4]};border-radius:999px;padding:4px 10px;font:600 11px/1 ${SA}">Color theory</span></div>`}},
+ yes:"Reduced the accents to one color",
+ no:[["Removed the link","B still has the same link."],["Made every element black","The label, link, quote rule, and tag in B are teal."]],
+ diff:"Red, green, violet, orange, teal → one teal accent (headline neutral)",
+ why:"An accent works by being rare. Five different accents compete, so the reader can't tell which color means “look here.”"},
+{issue:"accent",piece:"Design app toolbar",title:"Every button is a different color",
+ html:b=>{const B=[["New project","#2DA046"],["Share","#FF8514"],["Export","#7B2D96"],["Settings","#E0262F"]];return{w:420,h:200,bg:"#F2F3F6",body:`
+ <div class="ab" style="left:0;right:0;top:0;height:64px;background:#fff;border-bottom:1px solid #E1E4EA"></div>
+ <div class="ab" style="left:22px;top:22px;font:700 16px/1 ${SA}">Canvas</div>
+ <div class="ab lk" style="right:18px;top:15px;display:flex;gap:8px">${B.map(([l,c],i)=>{const s=b?`background:${c};color:#fff;border:1px solid ${c}`:i===0?`background:#2459B5;color:#fff;border:1px solid #2459B5`:`background:#fff;color:#333;border:1px solid #CDD2DA`;return `<span style="${s};border-radius:6px;padding:9px 11px;font:600 12px/1 ${SA};white-space:nowrap">${l}</span>`}).join("")}</div>
+ <div class="ab" style="left:22px;top:92px;right:22px;height:84px;border:2px dashed #CDD2DA;border-radius:10px;font:400 13px/84px ${SA};text-align:center;color:#888">Drop files here</div>`}},
+ yes:"Kept one saturated color for the main button and made the rest neutral",
+ no:[["Removed two of the buttons","All four buttons appear in both."],["Made all four buttons blue","Only “New project” is blue in B."]],
+ diff:"Green, orange, violet, red buttons → one blue primary + three neutral buttons",
+ why:"Color on a button says “this is the main action.” When every button is colored, users lose that signal."},
+{issue:"accent",piece:"Restaurant menu",title:"A rainbow of section headings",
+ html:b=>{const h=b?["#E0262F","#2DA046","#7B2D96"]:["#9A2A1E","#9A2A1E","#9A2A1E"],pc=b?"#FF8514":"#2A211B";const S=[["Starters",[["Tomato soup","$7"],["Garden salad","$9"]]],["Mains",[["Roasted chicken","$22"],["Mushroom risotto","$18"]]],["Desserts",[["Apple crisp","$8"],["Lemon tart","$8"]]]];
+ return{w:300,h:400,bg:"#FBF7EF",body:`<div class="ab" style="left:28px;right:28px;top:26px">${S.map(([s,it],i)=>`<div class="lk" style="font:700 12px/1 ${SA};letter-spacing:.18em;color:${h[i]};margin:${i?18:0}px 0 8px">${s.toUpperCase()}</div>${it.map(([n,p])=>`<div style="display:flex;justify-content:space-between;font:400 15px/1.7 ${SE};color:#2A211B"><span>${n}</span><span class="lk" style="color:${pc}">${p}</span></div>`).join("")}`).join("")}</div>`}},
+ yes:"Used one accent color for all section headings and set prices in the text color",
+ no:[["Changed the menu typeface","The typefaces are the same in both."],["Changed the background color","The cream background is the same in both."]],
+ diff:"Headings red / green / violet → one deep red · prices orange → text color",
+ why:"Headings at the same level should share one color. Changing color between them suggests a difference in meaning that isn't there."},
+
+/* PROPORTION */
+{issue:"proportion",piece:"Lecture poster",title:"Two colors fighting for control",
+ html:b=>{const L=b?"#FF8514":"#2459B5",R=b?"#2459B5":"#1B3F85",C=b?"#FFFFFF":"#FF8514";return{w:300,h:400,bg:L,body:`
+ <div class="ab lk" style="left:150px;top:0;width:150px;height:400px;background:${R}"></div>
+ <div class="ab lk" style="left:190px;top:250px;width:84px;height:84px;border-radius:50%;background:${C}"></div>
+ <div class="ab" style="left:26px;top:34px;font:800 44px/.95 ${SA};color:#fff">COLOR<br>IN<br>CONTEXT</div>
+ <div class="ab" style="left:26px;bottom:30px;font:600 14px/1.4 ${SA};color:#fff">Guest lecture · Room 204<br>Thursday, 6 PM</div>`}},
+ yes:"Made one color dominant and saved the orange for a small accent",
+ no:[["Removed the orange entirely","B still uses orange, on the circle."],["Changed the layout","Every shape is the same size and position in both."]],
+ diff:"Orange 50% / blue 50% → blue ~60% · navy ~30% · orange ~10%",
+ why:"Equal amounts of two strong colors split attention. Let one dominate, one support, and one accent."},
+{issue:"proportion",piece:"Bakery website hero",title:"Three loud colors in equal amounts",
+ html:b=>{const bg=b?"#E0267A":"#FBF3E6",pn=b?"#2DA046":"#D8EDDC",bt=b?"#FFE11A":"#E0267A",btT=b?"#1C1C1C":"#FFFFFF",tx=b?"#FFFFFF":"#2A211B";return{w:420,h:250,bg,body:`
+ <div class="ab lk" style="left:250px;top:0;width:170px;height:250px;background:${pn}"></div>
+ <div class="ab" style="left:28px;top:26px;font:700 14px/1 ${SE};color:${tx}">Crumb &amp; Co.</div>
+ <div class="ab" style="left:28px;top:70px;width:210px;font:800 30px/1.05 ${SA};color:${tx}">Fresh bread every morning</div>
+ <div class="ab lk" style="left:28px;top:170px;background:${bt};color:${btT};border-radius:6px;padding:11px 16px;font:700 13px/1 ${SA}">Order ahead</div>
+ <div class="ab" style="left:280px;top:60px;width:110px;height:130px;border-radius:55px 55px 10px 10px;background:#C9793B"></div>`}},
+ yes:"Assigned dominant, secondary, and accent roles to the colors",
+ no:[["Removed the green panel","The panel is still there in B, in a light green tint."],["Made the button larger","The button is the same size in both."]],
+ diff:"Pink / green / yellow at full strength → cream dominant · pale green secondary · pink accent",
+ why:"When every color is saturated, the eye has nowhere to rest. A calm dominant color makes the accent (the button) the obvious place to click."},
+{issue:"proportion",piece:"Business card",title:"A card split in half",
+ html:b=>{return{w:350,h:200,bg:b?"#C8283A":"#FFFFFF",body:`
+ <div class="ab lk" style="left:175px;top:0;width:175px;height:200px;background:${b?"#2E8B47":"#FFFFFF"}"></div>
+ <div class="ab lk" style="left:0;top:0;width:10px;height:200px;background:${b?"#C8283A":"#2E8B47"}"></div>
+ <div class="ab lk" style="left:30px;top:30px;width:26px;height:26px;border-radius:50%;background:${b?"#FFFFFF":"#C8283A"}"></div>
+ <div class="ab" style="left:30px;top:74px;font:700 20px/1.1 ${SE};color:${b?"#fff":"#1C1C1C"}">Maya Chen</div>
+ <div class="ab" style="left:30px;top:102px;font:400 12px/1.4 ${SA};color:${b?"#fff":"#555"}">Landscape Architect</div>
+ <div class="ab" style="left:196px;top:124px;font:400 11.5px/1.5 ${SA};color:${b?"#fff":"#333"}">260-555-0188<br>maya@greenline.co</div>`}},
+ yes:"Made white dominant and used the green and red in small amounts",
+ no:[["Changed the red to orange","The red is the same in both; it's just smaller in B."],["Moved the text","The text is in the same place in both."]],
+ diff:"Red 50% / green 50% → white dominant · green edge strip · red logo dot",
+ why:"Two saturated complements in equal halves fight each other (and read as a holiday card). Unequal amounts give the palette a clear order."},
+
+/* MEANING BEYOND COLOR */
+{issue:"cvd",piece:"Checkout form",title:"An error shown only in red",
+ html:b=>({w:320,h:320,bg:"#FFFFFF",body:`<div class="ab" style="left:28px;top:28px;font:700 20px/1.1 ${SA}">Shipping details</div>
+ <div class="ab" style="left:28px;top:70px;font:600 12.5px/1 ${SA};color:#333">Name</div><div class="ab" style="left:28px;right:28px;top:88px;height:38px;border:1.5px solid #CDD2DA;border-radius:6px;font:400 13px/35px ${SA};padding-left:12px">Jordan Reyes</div>
+ <div class="ab" style="left:28px;top:144px;font:600 12.5px/1 ${SA};color:#333">Email</div><div class="ab lk" style="left:28px;right:28px;top:162px;height:38px;border:2px solid #D7263D;border-radius:6px;font:400 13px/34px ${SA};padding-left:12px">jordan@reyes</div>
+ ${b?"":`<div class="ab lk" style="left:28px;right:28px;top:208px;font:600 12.5px/1.3 ${SA};color:#B3261E">⚠ Enter a full email address, like name@example.com</div>`}
+ <div class="ab" style="left:28px;top:256px;background:#2459B5;color:#fff;border-radius:6px;padding:11px 18px;font:600 13px/1 ${SA}">Continue</div>`}),
+ yes:"Added an icon and a message so the error doesn't rely on color alone",
+ no:[["Made the red border brighter","The border is the same red in both."],["Changed the field's background color","The field is white in both."]],
+ diff:"Red border only → red border + ⚠ icon + written message",
+ why:"Switch the view to Deuteranopia: the red border in A looks like any other border. Color can reinforce meaning, but it can't carry it alone."},
+{issue:"cvd",piece:"Annual report chart",title:"Two lines told apart only by color",
+ html:b=>{const p1="30,150 90,132 150,120 210,96 270,80",p2="30,120 90,126 150,114 210,118 270,110";return{w:380,h:260,bg:"#FFFFFF",body:`
+ <div class="ab" style="left:24px;top:20px;font:700 17px/1 ${SA}">Visitors per month (thousands)</div>
+ <svg class="ab" style="left:24px;top:48px" width="330" height="190" viewBox="0 0 330 190">
+  ${[40,80,120,160].map(y=>`<line x1="20" x2="300" y1="${y}" y2="${y}" stroke="#EEE"/>`).join("")}
+  <polyline class="lk" points="${p1}" fill="none" stroke="#D7263D" stroke-width="3"/>
+  <polyline class="lk" points="${p2}" fill="none" stroke="#2E9E4F" stroke-width="3" ${b?"":'stroke-dasharray="7 5"'}/>
+  ${b?`<rect x="30" y="2" width="10" height="10" fill="#D7263D"/><text x="46" y="11" font-size="11" font-family="Source Sans 3,Arial">Museum</text><rect x="110" y="2" width="10" height="10" fill="#2E9E4F"/><text x="126" y="11" font-size="11" font-family="Source Sans 3,Arial">Gardens</text>`
+   :`<text class="lk" x="276" y="84" font-size="12" font-weight="700" fill="#D7263D" font-family="Source Sans 3,Arial">Museum</text><text class="lk" x="276" y="114" font-size="12" font-weight="700" fill="#2E9E4F" font-family="Source Sans 3,Arial">Gardens</text>`}
+  ${["Jan","Feb","Mar","Apr","May"].map((m,i)=>`<text x="${22+i*60}" y="182" font-size="11" fill="#777" font-family="Source Sans 3,Arial">${m}</text>`).join("")}
+ </svg>`}},
+ yes:"Labeled the lines directly and made one dashed",
+ no:[["Changed the line colors","The lines are the same red and green in both."],["Made the lines thicker","The lines are the same thickness in both."]],
+ diff:"Color-coded legend → direct labels + solid vs dashed lines",
+ why:"Red and green are the pair most often confused. Direct labels and a line pattern keep the chart readable for everyone, and save a trip to the legend."},
+{issue:"cvd",piece:"Bus route status board",title:"Status shown only by dot color",
+ html:b=>{const R=[["Route 1 · Downtown",1],["Route 4 · Airport",0],["Route 7 · Riverside",1],["Route 9 · University",0]];return{w:320,h:280,bg:"#15181E",body:`
+ <div class="ab" style="left:24px;top:22px;font:700 18px/1 ${SA};color:#fff">Service status</div>
+ <div class="ab" style="left:24px;right:24px;top:58px">${R.map(([r,ok])=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #2A2F38;font:400 14px/1 ${SA};color:#E6E8EC"><span>${r}</span><span class="lk" style="display:flex;align-items:center;gap:6px;font:600 12.5px/1 ${SA};color:${ok?"#4CC36A":"#F0524F"}"><i style="width:12px;height:12px;border-radius:50%;background:${ok?"#4CC36A":"#F0524F"}"></i>${b?"":ok?"✓ On time":"✕ Delayed"}</span></div>`).join("")}</div>`}},
+ yes:"Added symbols and words next to each status dot",
+ no:[["Made the dots larger","The dots are 12 px in both."],["Changed green and red to blue and orange","The dots are the same green and red in both."]],
+ diff:"Dot color only → dot + ✓/✕ symbol + “On time” / “Delayed”",
+ why:"With deuteranopia, the red and green dots look nearly the same. Words and symbols make the status clear for every rider."},
+
+/* VIBRATING */
+{issue:"vibrate",piece:"Store sale banner",title:"Red and green that shimmer",
+ html:b=>{const bg=b?"#2DA046":"#0F3D22",t=b?"#E0262F":"#FFC2BA";return{w:400,h:220,bg,body:`
+ <div class="ab lk" style="left:0;right:0;top:40px;text-align:center;font:900 76px/1 ${SA};color:${t};letter-spacing:.02em">SALE</div>
+ <div class="ab lk" style="left:0;right:0;top:130px;text-align:center;font:700 20px/1 ${SA};color:${t}">Everything 40% off · Today only</div>`}},
+ yes:"Separated the complements in value: darker green, lighter red",
+ no:[["Swapped the red and green","The background is still green and the text is still red-family in B."],["Changed the text to white","The text in B is a light tint of red, not white."]],
+ diff:()=>`Contrast: ${cr("#E0262F","#2DA046")} → ${cr("#FFC2BA","#0F3D22")}`,
+ why:"Saturated complements of similar value seem to vibrate where they meet, which tires the eye. Keep the pair, but make one light and one dark."},
+{issue:"vibrate",piece:"Jazz festival poster",title:"Blue text buzzing on orange",
+ html:b=>{const t=b?"#2459B5":"#13254D";return{w:300,h:400,bg:"#FF8514",body:`
+ <div class="ab lk" style="left:26px;top:36px;font:800 50px/.95 ${SA};color:${t}">BLUE<br>NOTE<br>WEEKEND</div>
+ <div class="ab lk" style="left:26px;top:210px;width:240px;font:600 16px/1.45 ${SA};color:${t}">Three nights of jazz on the river. Food trucks, free admission, all ages.</div>
+ <div class="ab lk" style="left:26px;bottom:30px;font:700 15px/1.3 ${SA};color:${t}">Aug 7–9 · Harbor Stage</div>`}},
+ yes:"Darkened the blue so it no longer vibrates against the orange",
+ no:[["Changed the background to yellow","The background is the same orange in both."],["Added an outline to the text","The text has no outline in either version."]],
+ diff:()=>`Text contrast: ${cr("#2459B5","#FF8514")} → ${cr("#13254D","#FF8514")}`,
+ why:"On the RYB wheel, blue and orange are complements. At full strength and similar value, their edges flicker. A shade of blue keeps the relationship and fixes the flicker."},
+{issue:"vibrate",piece:"Game app button",title:"A label that flickers",
+ html:b=>{const t=b?"#F2541B":"#FFE3D6";return{w:320,h:220,bg:"#101624",body:`
+ <div class="ab" style="left:0;right:0;top:34px;text-align:center;font:800 26px/1 ${SA};color:#fff">Level complete!</div>
+ <div class="ab" style="left:0;right:0;top:72px;text-align:center;font:400 14px/1 ${SA};color:#A9B2C3">You earned 3 stars</div>
+ <div class="ab lk" style="left:70px;right:70px;top:120px;height:56px;border-radius:12px;background:#2459B5;color:${t};font:800 20px/56px ${SA};text-align:center;letter-spacing:.04em">NEXT LEVEL</div>`}},
+ yes:"Lightened the label to a pale tint so it separates from the blue in value",
+ no:[["Changed the button to orange","The button is the same blue in both."],["Made the label smaller","The label is the same size in both."]],
+ diff:()=>`Label contrast: ${cr("#F2541B","#2459B5")} → ${cr("#FFE3D6","#2459B5")}`,
+ why:"Red-orange on blue is a near-complementary pair at similar value, so the letters buzz. A pale tint keeps the warm hint but reads cleanly."},
+
+/* HARMONY */
+{issue:"harmony",piece:"Coffee shop website",title:"Colors with no relationship",
+ html:b=>{const nav=b?"#9CCB2B":"#6B2A12",logo=b?"#E0267A":"#FFB319",bt=b?"#129489":"#FF8514",band=b?"#7B2D96":"#F2541B";return{w:420,h:260,bg:"#FFF8EE",body:`
+ <div class="ab lk" style="left:0;right:0;top:0;height:56px;background:${nav}"></div>
+ <div class="ab lk" style="left:24px;top:17px;font:700 20px/1 ${SE};color:${logo}">Ember Coffee</div>
+ <div class="ab" style="left:24px;top:84px;width:240px;font:800 28px/1.08 ${SA};color:#2A211B">Roasted in small batches</div>
+ <div class="ab lk" style="left:24px;top:170px;background:${bt};color:#fff;border-radius:6px;padding:11px 16px;font:700 13px/1 ${SA}">Order beans</div>
+ <div class="ab lk" style="left:290px;top:80px;width:106px;height:150px;border-radius:10px;background:${band}"></div>`}},
+ yes:"Replaced the unrelated colors with an analogous warm palette",
+ no:[["Made every color a pastel","B uses deep and strong colors, not pastels."],["Added more colors","B uses the same number of colors, all neighbors on the wheel."]],
+ diff:"Yellow-green, magenta, teal, violet → red-orange, orange, yellow-orange (+ a dark shade)",
+ why:"Colors picked one at a time rarely relate. Choosing neighbors on the wheel gives an analogous palette that feels warm and planned, which suits a coffee brand."},
+{issue:"harmony",piece:"Kids' summer camp flyer",title:"Six random colors",
+ html:b=>{const c=b?["#8C6A4F","#E89BC2","#5E8C7F","#9A9A3A","#B8A6D9","#9AA0A6"]:["#E0262F","#FFE11A","#2459B5","#E0262F","#FFE11A","#2459B5"];return{w:300,h:400,bg:"#FFFFFF",body:`
+ <div class="ab" style="left:24px;top:26px;font:800 40px/.95 ${SA};color:#1C1C1C">CAMP<br>SUNNY-<br>BROOK</div>
+ ${[[24,170],[108,170],[192,170],[24,254],[108,254],[192,254]].map(([x,y],i)=>`<div class="ab lk" style="left:${x}px;top:${y}px;width:76px;height:76px;border-radius:${i%2?"50%":"12px"};background:${c[i]}"></div>`).join("")}
+ <div class="ab" style="left:24px;bottom:22px;font:600 13px/1.3 ${SA};color:#333">Ages 6–12 · June 15 – Aug 7</div>`}},
+ yes:"Rebuilt the palette as a triad: red, yellow, and blue",
+ no:[["Made the shapes all the same color","B uses three colors, repeated."],["Changed the shapes","Every shape is the same size and position in both."]],
+ diff:"6 unrelated muted hues → triad of the three RYB primaries",
+ why:"A triad (three hues evenly spaced on the wheel) is bright and playful but still organized. Here it's the three primaries, a natural fit for a kids' brand."},
+{issue:"harmony",piece:"Spa brochure",title:"Clashing neon on a calm brief",
+ html:b=>{const c=b?["#FF6A00","#8B2BE2","#B6F000"]:["#2459B5","#129489","#2DA046"],bg=b?"#FFFFFF":"#EEF6F4";return{w:300,h:400,bg,body:`
+ <div class="ab lk" style="left:0;right:0;top:0;height:150px;background:${c[0]}"></div>
+ <div class="ab lk" style="left:190px;top:100px;width:90px;height:90px;border-radius:50%;background:${c[1]}"></div>
+ <div class="ab" style="left:26px;top:176px;font:700 26px/1.1 ${SE};color:#1C2B2A">Stillwater Spa</div>
+ <div class="ab" style="left:26px;top:214px;width:240px;font:400 14px/1.5 ${SA};color:#3A4A48">Unwind with massage, mineral pools, and quiet gardens by the lake.</div>
+ <div class="ab lk" style="left:26px;top:300px;background:${c[2]};color:#fff;border-radius:6px;padding:11px 16px;font:700 13px/1 ${SA}">Book a visit</div>`}},
+ yes:"Replaced the clashing neons with an analogous palette of blues and greens",
+ no:[["Made the brochure black and white","B still uses color."],["Moved the circle","The circle is in the same place in both."]],
+ diff:"Neon orange, violet, yellow-green → blue, blue-green, green (with a pale blue-green page tint)",
+ why:"Harmony should match the message. Neighboring cool hues feel calm and unified, while unrelated neons fight each other and the brief."},
+
+/* CONSISTENCY */
+{issue:"consistency",piece:"Company website header",title:"Three almost-matching blues",
+ html:b=>{const c=b?["#1E3F8A","#3B78E0","#2E5FB0"]:["#2459B5","#2459B5","#2459B5"];return{w:420,h:230,bg:"#FFFFFF",body:`
+ <div class="ab lk" style="left:24px;top:22px;font:800 20px/1 ${SA};color:${c[0]}">bluepeak</div>
+ <div class="ab" style="right:24px;top:24px;display:flex;gap:18px;font:400 13px/1 ${SA};color:#333"><span class="lk" style="border-bottom:3px solid ${c[1]};padding-bottom:6px">Products</span><span>Pricing</span><span>About</span></div>
+ <div class="ab" style="left:24px;top:84px;width:300px;font:800 28px/1.08 ${SA};color:#121826">Cloud storage for creative teams</div>
+ <div class="ab lk" style="left:24px;top:168px;background:${c[2]};color:#fff;border-radius:6px;padding:11px 16px;font:700 13px/1 ${SA}">Start free trial</div>`}},
+ yes:"Unified the three blues into one brand blue",
+ no:[["Changed the brand color to a new hue","B is still blue."],["Removed the blue from the button","The button is still blue in B."]],
+ diff:"#1E3F8A, #3B78E0, #2E5FB0 → #2459B5 everywhere",
+ why:"Near-matches look like mistakes and weaken a brand. Define the exact brand color once and reuse it."},
+{issue:"consistency",piece:"Instagram post series",title:"A series that doesn't match",
+ html:b=>{const c=b?["#FF8514","#F2541B","#FFA24C"]:["#FF8514","#FF8514","#FF8514"],t=["Mon","Wed","Fri"],s=["Sketch day","Ink day","Print day"];return{w:420,h:200,bg:"#F2F3F6",body:`
+ ${c.map((x,i)=>`<div class="ab lk" style="left:${20+i*132}px;top:38px;width:120px;height:120px;background:${x};border-radius:4px"><div style="padding:14px;font:700 11px/1 ${SA};letter-spacing:.14em;color:#fff">${t[i].toUpperCase()}</div><div style="padding:0 14px;font:800 18px/1.1 ${SA};color:#fff">${s[i]}</div></div>`).join("")}`}},
+ yes:"Used the exact same brand orange on all three posts",
+ no:[["Changed the text color","The text is white on all posts in both."],["Changed the post layout","The layout is the same in both."]],
+ diff:"#FF8514, #F2541B, #FFA24C → #FF8514 on every post",
+ why:"A series is recognized by repetition. When each post is a slightly different orange, the grid in a feed looks accidental."},
+{issue:"consistency",piece:"Garden center app",title:"Four different greens",
+ html:b=>{const c=b?["#2DA046","#1F7A3A","#57C26A","#3E8E5E"]:["#2E8B47","#2E8B47","#2E8B47","#2E8B47"];return{w:320,h:300,bg:"#FFFFFF",body:`
+ <div class="ab lk" style="left:24px;top:24px;width:34px;height:34px;border-radius:9px;background:${c[0]}"></div>
+ <div class="ab lk" style="left:68px;top:30px;font:800 20px/1 ${SA};color:${c[1]}">Greenhouse</div>
+ <div class="ab" style="left:24px;top:84px;right:24px;font:400 14px/1.5 ${SA};color:#333">Your order of <b>3 tomato plants</b> is ready for pickup.</div>
+ <div class="ab lk" style="left:24px;top:140px;font:600 13px/1 ${SA};color:${c[3]}">✓ Paid · ✓ Packed · ✓ Ready</div>
+ <div class="ab lk" style="left:24px;right:24px;top:184px;background:${c[2]};color:#fff;border-radius:8px;padding:13px 0;text-align:center;font:700 14px/1 ${SA}">Get directions</div>`}},
+ yes:"Replaced the four greens with one brand green",
+ no:[["Changed the green to blue","B is still green."],["Made the button smaller","The button is the same size in both."]],
+ diff:"4 greens → #2E8B47 everywhere",
+ why:"Each extra version of a brand color is a small inconsistency. Together they make an app feel assembled rather than designed."},
+
+/* READING SURFACES */
+{issue:"surface",piece:"Community newsletter",title:"Body text on a saturated background",
+ html:b=>{const bg=b?"#2F6FDB":"#E8F0FC";return{w:320,h:360,bg,body:`<div class="ab" style="left:28px;right:28px;top:28px">
+ <div style="font:700 11px/1 ${SA};letter-spacing:.16em;color:#10224A;margin-bottom:8px">APRIL NEWS</div>
+ <div style="font:700 24px/1.12 ${SE};color:#10224A;margin-bottom:12px">The Library Turns 100</div>
+ <p class="lk" style="font:400 14px/1.55 ${SE};color:#10224A">Join us on April 12 for a century of stories. Local authors will read from their work, the children's room will host a mural project, and the reading garden opens for the season.</p></div>`}},
+ yes:"Replaced the saturated background with a light tint of the same blue",
+ no:[["Changed the text to white","The text is still dark navy in B."],["Changed the background to a different hue","B's background is a pale version of the same blue."]],
+ diff:()=>`Body contrast: ${cr("#10224A","#2F6FDB")} → ${cr("#10224A","#E8F0FC")}`,
+ why:"A saturated background is fine for a headline but tiring under paragraphs. A pale tint keeps the color identity and gives text a calm surface."},
+{issue:"surface",piece:"Travel magazine cover",title:"Text lost in a busy photo",
+ html:b=>({w:300,h:400,bg:"#FFFFFF",body:`<div class="ab" style="inset:0;background:repeating-linear-gradient(115deg,#F2B84B 0 18px,#E8664A 18px 34px,#FFFFFF 34px 46px,#2E8B8A 46px 66px)"></div>
+ <div class="ab lk" style="left:0;right:0;bottom:0;height:170px;background:${b?"transparent":"rgba(12,20,30,.72)"}"></div>
+ <div class="ab" style="left:24px;bottom:84px;font:800 34px/1 ${SA};color:#FFFFFF">Market Days<br>in Oaxaca</div>
+ <div class="ab" style="left:24px;bottom:30px;width:250px;font:600 14px/1.4 ${SA};color:#FFFFFF">Textiles, mole, and color on every corner</div>`}),
+ yes:"Added a dark overlay behind the text",
+ no:[["Made the text larger","The text is the same size in both."],["Changed the text color","The text is white in both."]],
+ diff:"No overlay → 72% dark overlay under the headline area",
+ why:"White text over a busy, many-valued image has no consistent contrast. An overlay gives it a steady dark surface without hiding the photo."},
+{issue:"surface",piece:"Theater program insert",title:"Red text on a red page",
+ html:b=>{const bg=b?"#D7263D":"#FFF4EE";return{w:300,h:360,bg,body:`<div class="ab" style="left:28px;right:28px;top:28px">
+ <div style="font:700 11px/1 ${SA};letter-spacing:.16em;color:#4A0E14;margin-bottom:8px">DIRECTOR'S NOTE</div>
+ <div style="font:700 22px/1.15 ${SE};color:#4A0E14;margin-bottom:12px">Why This Play, Now</div>
+ <p class="lk" style="font:400 14px/1.55 ${SE};color:#4A0E14">We chose this story because it asks what a small town owes its neighbors. Our cast of students and community members spent eight weeks finding the answer together.</p></div>`}},
+ yes:"Changed the page to a pale tint so the dark red text stands out",
+ no:[["Changed the text to white","The text is dark red in both."],["Enlarged the text","The text is the same size in both."]],
+ diff:()=>`Body contrast: ${cr("#4A0E14","#D7263D")} → ${cr("#4A0E14","#FFF4EE")}`,
+ why:"Dark red on bright red is too close in value. Keep red as the accent (the text) and give the paragraph a light surface."},
+
+/* DATA COLOR */
+{issue:"datacolor",piece:"County population map",title:"A rainbow for ordered data",
+ html:b=>{const v=[1,3,2,5,4,2,6,3,1,4,5,6];const rb=["#7B2D96","#2459B5","#129489","#2DA046","#FFE11A","#FF8514","#E0262F"],sq=["#EAF1FB","#C6D9F2","#9CBDE6","#6C9BD6","#3F76C1","#1F4E96","#0F2F63"];const col=b?rb:sq;
+ return{w:360,h:300,bg:"#FFFFFF",body:`<div class="ab" style="left:24px;top:20px;font:700 17px/1 ${SA}">Residents per square mile</div>
+ ${v.map((x,i)=>`<div class="ab lk" style="left:${24+(i%4)*62}px;top:${52+Math.floor(i/4)*62}px;width:58px;height:58px;background:${col[x]}"></div>`).join("")}
+ <div class="ab" style="left:24px;top:250px;display:flex;gap:2px">${col.slice(0,7).map(c=>`<i style="width:28px;height:12px;background:${c}"></i>`).join("")}</div>
+ <div class="ab" style="left:24px;top:268px;width:200px;display:flex;justify-content:space-between;font:400 11px/1 ${SA};color:#666"><span>Fewer</span><span>More</span></div>`}},
+ yes:"Replaced the rainbow with one hue from light to dark",
+ no:[["Changed the data","Each county has the same value in both; only the colors changed."],["Added more colors to the legend","B's legend uses one hue."]],
+ diff:"7-hue rainbow scale → 7 steps of blue, light to dark",
+ why:"Ordered data needs colors that read in order. Light-to-dark is instantly “less to more”; a rainbow makes readers look up every color."},
+{issue:"datacolor",piece:"Sales report bar chart",title:"Nothing highlights our bar",
+ html:b=>{const d=[["North",62],["Us",88],["East",54],["West",70]],c=["#E0262F","#2459B5","#2DA046","#FF8514"];return{w:360,h:260,bg:"#FFFFFF",body:`<div class="ab" style="left:24px;top:20px;font:700 17px/1 ${SA}">Customer satisfaction score</div>
+ ${d.map(([l,v],i)=>{const col=b?c[i]:l==="Us"?"#F2541B":"#B8BEC8";return `<div class="ab lk" style="left:${40+i*76}px;top:${220-v*1.7}px;width:50px;height:${v*1.7}px;background:${col}"></div><div class="ab" style="left:${40+i*76}px;top:226px;width:50px;text-align:center;font:${l==="Us"?700:400} 12px/1 ${SA};color:#333">${l}</div>`}).join("")}`}},
+ yes:"Grayed the other bars and gave only “Us” the accent color",
+ no:[["Sorted the bars by value","The bars are in the same order in both."],["Made the “Us” bar wider","All bars are the same width in both."]],
+ diff:"4 different hues → 3 gray bars + 1 red-orange highlight",
+ why:"When every bar has its own color, the chart has no point. Gray the context and color the one bar the story is about."},
+{issue:"datacolor",piece:"Budget breakdown chart",title:"Categories you can't tell apart",
+ html:b=>{const parts=[["Rent",40],["Staff",30],["Supplies",18],["Marketing",12]],c=b?["#1F4E96","#2A5CA8","#3469B8","#3F76C1"]:["#2459B5","#FF8514","#2DA046","#7B2D96"];let x=24;return{w:380,h:220,bg:"#FFFFFF",body:`<div class="ab" style="left:24px;top:20px;font:700 17px/1 ${SA}">Where the budget goes</div>
+ ${parts.map(([l,p],i)=>{const w=p*3.3,s=`<div class="ab lk" style="left:${x}px;top:60px;width:${w}px;height:44px;background:${c[i]}"></div>`;x+=w;return s}).join("")}
+ <div class="ab" style="left:24px;top:124px;display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;width:320px">${parts.map(([l,p],i)=>`<div style="display:flex;align-items:center;gap:8px;font:400 13px/1 ${SA}"><i class="lk" style="width:14px;height:14px;background:${c[i]}"></i>${l} · ${p}%</div>`).join("")}</div>`}},
+ yes:"Gave each category a clearly different hue",
+ no:[["Changed the percentages","The values are the same in both."],["Removed the legend","B still has the legend."]],
+ diff:"4 near-identical blues → blue, orange, green, violet",
+ why:"Categories aren't ordered, so they need colors that differ in hue. Four similar blues force readers to match swatches with no success."},
+
+/* INTERACTIVE */
+{issue:"interactive",piece:"Online article",title:"Links hiding in the text",
+ html:b=>{const l=b?"color:#2B2B2B":"color:#1B5FC1;text-decoration:underline;text-underline-offset:2px";return{w:320,h:300,bg:"#FFFFFF",body:`<div class="ab" style="left:28px;right:28px;top:28px">
+ <div style="font:700 22px/1.15 ${SE};margin-bottom:12px">Getting Started with Color</div>
+ <p style="font:400 14.5px/1.6 ${SE};color:#2B2B2B">Begin with the <span class="lk" style="${l}">RYB color wheel</span>, then try building a palette in a <span class="lk" style="${l}">free color tool</span>. When you're ready, read our <span class="lk" style="${l}">guide to contrast</span> before you publish.</p></div>`}},
+ yes:"Styled the links in an accent color with an underline",
+ no:[["Made the links bold","The links are the same weight as the text in both."],["Moved the links to a list","The links are in the same sentence in both."]],
+ diff:"Links in text color → blue + underline",
+ why:"If links look like body text, nobody knows they can click. A consistent link color (plus an underline, so color isn't the only cue) marks what's interactive."},
+{issue:"interactive",piece:"Registration form",title:"A disabled button that looks ready",
+ html:b=>({w:320,h:280,bg:"#FFFFFF",body:`<div class="ab" style="left:28px;top:28px;font:700 20px/1.1 ${SA}">Register for the workshop</div>
+ <div class="ab" style="left:28px;top:74px;display:flex;align-items:center;gap:10px;font:400 14px/1.3 ${SA};color:#333"><i style="width:18px;height:18px;border:2px solid #9AA3AF;border-radius:4px"></i>I agree to the studio safety rules</div>
+ <div class="ab" style="left:28px;top:108px;width:260px;font:400 12.5px/1.4 ${SA};color:#666">You must agree before you can register. The button unlocks when the box is checked.</div>
+ <div class="ab lk" style="left:28px;top:172px;background:${b?"#2459B5":"#D5D9E0"};color:${b?"#FFFFFF":"#6B7280"};border-radius:6px;padding:12px 20px;font:700 14px/1 ${SA}">Register</div>`}),
+ yes:"Gave the disabled button a muted gray so it reads as unavailable",
+ no:[["Removed the button until the box is checked","The button is visible in both."],["Changed the button's text","The label says “Register” in both."]],
+ diff:"Disabled state: full blue → gray with gray text",
+ why:"Saturated color says “press me.” A disabled control should look inactive, or people will click it and think the form is broken."},
+{issue:"interactive",piece:"Website navigation",title:"Which page am I on?",
+ html:b=>{const L=["Home","Classes","Pricing","Contact"];return{w:420,h:200,bg:"#FFFFFF",body:`<div class="ab" style="left:24px;top:24px;font:700 17px/1 ${SE};color:#2F4A3A">Harbor Yoga</div>
+ <div class="ab" style="right:24px;top:24px;display:flex;gap:22px">${L.map(l=>{const cur=l==="Pricing";return `<span class="${cur?"lk":""}" style="font:${cur&&!b?600:400} 13px/1 ${SA};color:${cur&&!b?"#2F6B4F":"#6B7280"};padding-bottom:8px;border-bottom:3px solid ${cur&&!b?"#2F6B4F":"transparent"}">${l}</span>`}).join("")}</div>
+ <div class="ab" style="left:0;right:0;top:58px;border-top:1px solid #E5E7EB"></div>
+ <div class="ab" style="left:24px;top:92px;font:700 26px/1.1 ${SE};color:#1C1C1C">Pricing</div>
+ <div class="ab" style="left:24px;top:132px;font:400 14px/1.5 ${SA};color:#555">Drop-in $18 · 10-class pass $150</div>`}},
+ yes:"Marked the current page with the accent color and an underline bar",
+ no:[["Made all the links bold","Only “Pricing” changed in B."],["Reordered the links","The links are in the same order in both."]],
+ diff:"Current page: gray like the rest → green text + green bar",
+ why:"Navigation should answer “where am I?” A distinct color for the current item (with a second cue like the bar) does it at a glance."},
+
+/* DARK MODE */
+{issue:"darkmode",piece:"Music app, dark mode",title:"A brand blue that sinks",
+ html:b=>{const c=b?"#1D3FBF":"#8FB0FF";return{w:320,h:320,bg:"#121212",body:`<div class="ab" style="left:24px;top:24px;font:700 22px/1 ${SA};color:#F2F2F2">Your library</div>
+ ${["Late Night Mix","Focus Flow","Road Trip"].map((t,i)=>`<div class="ab" style="left:24px;right:24px;top:${72+i*64}px;display:flex;align-items:center;gap:12px"><i style="width:48px;height:48px;border-radius:6px;background:#2A2A2A"></i><div><div style="font:600 15px/1.2 ${SA};color:#F2F2F2">${t}</div><div class="lk" style="font:600 12.5px/1.6 ${SA};color:${c}">${12+i*7} songs · Play</div></div></div>`).join("")}
+ <div class="ab lk" style="left:24px;bottom:24px;font:700 14px/1 ${SA};color:${c}">+ New playlist</div>`}},
+ yes:"Switched the blue to a lighter, less saturated version for dark mode",
+ no:[["Changed the accent to a different hue","B's accent is still blue, just lighter."],["Made the background lighter","The background is the same near-black in both."]],
+ diff:()=>`Accent contrast: ${cr("#1D3FBF","#121212")} → ${cr("#8FB0FF","#121212")}`,
+ why:"A deep, saturated brand color that works on white can disappear on black. Dark themes need lighter, softer versions of the same hues."},
+{issue:"darkmode",piece:"Banking app alert, dark mode",title:"A red that glows",
+ html:b=>{const c=b?"#FF0000":"#FF8A80";return{w:320,h:240,bg:"#121212",body:`<div class="ab" style="left:24px;top:24px;font:700 20px/1 ${SA};color:#F2F2F2">Checking ·· 4821</div>
+ <div class="ab lk" style="left:24px;right:24px;top:66px;border:1.5px solid ${c};border-radius:10px;padding:14px"><div style="font:700 14px/1.3 ${SA};color:${c}">Payment failed</div><div style="font:400 13px/1.45 ${SA};color:#D0D0D0;margin-top:4px">Your transfer to Riverside Rentals didn't go through. Try again or contact support.</div></div>
+ <div class="ab" style="left:24px;top:190px;font:600 13px/1 ${SA};color:#8FB0FF">Try again</div>`}},
+ yes:"Softened the pure red to a lighter, less saturated red",
+ no:[["Changed the alert to orange","B's alert is still red, just softer."],["Removed the border","The alert has a border in both."]],
+ diff:"#FF0000 → #FF8A80",
+ why:"Pure, saturated red on black seems to glow and vibrate. A lighter, calmer red still signals an error without straining the eye."},
+{issue:"darkmode",piece:"Fitness dashboard, dark mode",title:"Chart lines lost in the dark",
+ html:b=>{const c1=b?"#1B3F85":"#7FA6FF",c2=b?"#4B3AA8":"#C4A3FF";return{w:360,h:260,bg:"#15181E",body:`<div class="ab" style="left:24px;top:20px;font:700 17px/1 ${SA};color:#F2F2F2">Weekly activity</div>
+ <svg class="ab" style="left:24px;top:50px" width="310" height="180" viewBox="0 0 310 180">${[40,80,120].map(y=>`<line x1="0" x2="300" y1="${y}" y2="${y}" stroke="#2A2F38"/>`).join("")}
+ <polyline class="lk" points="0,130 50,110 100,120 150,70 200,90 250,50 300,60" fill="none" stroke="${c1}" stroke-width="3"/>
+ <polyline class="lk" points="0,150 50,140 100,100 150,110 200,120 250,100 300,90" fill="none" stroke="${c2}" stroke-width="3" stroke-dasharray="7 5"/>
+ <text x="0" y="172" font-size="11" fill="#9AA3AF" font-family="Source Sans 3,Arial">Mon</text><text x="276" y="172" font-size="11" fill="#9AA3AF" font-family="Source Sans 3,Arial">Sun</text>
+ <text x="210" y="40" font-size="12" font-weight="700" fill="${c1}" font-family="Source Sans 3,Arial">Steps</text><text x="210" y="84" font-size="12" font-weight="700" fill="${c2}" font-family="Source Sans 3,Arial">Sleep</text></svg>`}},
+ yes:"Lightened both line colors so they read on the dark background",
+ no:[["Changed the lines to different hues","The lines are still blue and violet in B."],["Made the lines thicker","The lines are 3 px in both."]],
+ diff:()=>`Line contrast: ${cr("#1B3F85","#15181E")} → ${cr("#7FA6FF","#15181E")}`,
+ why:"Colors chosen for a white page are often too dark for a dark one. Keep the hues, raise the value."}
+];
+D.forEach((c,i)=>{c.n=i+1;const s=D.filter(x=>x.issue===c.issue);c.id=c.issue+"-"+(s.indexOf(c)+1)});
+
+/* ═════════ STATE ═════════ */
+const $=id=>document.getElementById(id);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const RANKS=[[0,"Swatch Rookie"],[100,"Palette Apprentice"],[300,"Hue Hunter"],[600,"Value Sleuth"],[1000,"Chroma Detective"],[1600,"Master Colorist"]];
+let P={xp:0,streak:0,best:0,det:{},counts:{}};
+try{Object.assign(P,JSON.parse(localStorage.getItem("color-detective")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("color-detective",JSON.stringify(P))}catch(e){}};
+let tab="wheel",R=null,view="normal",labelsOn=true,hardHarmony=false,detScope="all",detDeck=[],detPos=0,chall=null;
+
+function renderRank(){const cur=[...RANKS].reverse().find(r=>P.xp>=r[0]),i=RANKS.indexOf(cur),nx=RANKS[i+1];
+ $("rankName").textContent=cur[1];$("xpText").textContent=`${P.xp} XP`+(nx?` / ${nx[0]}`:"");
+ $("xpBar").style.width=(nx?Math.min(100,(P.xp-cur[0])/(nx[0]-cur[0])*100):100)+"%";
+ $("streakText").textContent=`Streak ${P.streak} · Best ${P.best}`+(P.streak>=3?" · streak bonus active":"")}
+function award(ok,base){if(!ok){P.streak=0;save();renderRank();return 0}P.streak++;P.best=Math.max(P.best,P.streak);const pts=base*(chall?2:1)+(P.streak>=3?5:0);P.xp+=pts;save();renderRank();return pts}
+
+function renderTerms(){$("terms").innerHTML=VOCAB.map(([g,list])=>`<p class="group">${g}</p><div class="terms">${list.map(([k,n,d,ad,sw])=>{let tp="";if(D.some(c=>c.issue===k)){const cs=D.filter(c=>c.issue===k);tp=`<span class="tp">${cs.filter(c=>P.det[c.id]).length}/${cs.length}</span>`}
+ return `<div class="term" data-key="${k}"><span class="tn"><span>${n}</span>${tp}</span><span class="td">${d}</span>${ad?`<span class="ad">${ad}</span>`:""}${sw?`<span class="sw">${sw.map(i=>`<i style="background:${hx(i)}" title="${nm(i)}"></i>`).join("")}</span>`:""}</div>`}).join("")}</div>`).join("")}
+function highlight(k){document.querySelectorAll(".term.on").forEach(t=>t.classList.remove("on"));const card=document.querySelector(`.term[data-key="${k}"]`);if(card){card.classList.add("on");const side=document.querySelector(".vocab");if(getComputedStyle(side).position==="sticky")side.scrollTop=card.offsetTop-side.offsetTop-60}}
+
+/* ═════════ WHEEL SVG ═════════ */
+function wheelSVG({sel=[],given=[],right=[],wrong=[],dots=[],labels=true,click=false,center=[]}={}){
+ const R1=150,R0=64,pt=(r,a)=>{const t=(a-90)*Math.PI/180;return[(r*Math.cos(t)).toFixed(2),(r*Math.sin(t)).toFixed(2)]};let s="";
+ for(let i=0;i<12;i++){const a=i*30,[x1,y1]=pt(R1,a-15),[x2,y2]=pt(R1,a+15),[x3,y3]=pt(R0,a+15),[x4,y4]=pt(R0,a-15),[lx,ly]=pt(108,a),c=hx(i),fc=onColor(c);
+  s+=`<g class="${click?"wg":""}" data-i="${i}" ${click?`tabindex="0" role="button" aria-pressed="${sel.includes(i)}" aria-label="${nm(i)}"`:""}><path d="M${x1} ${y1}A${R1} ${R1} 0 0 1 ${x2} ${y2}L${x3} ${y3}A${R0} ${R0} 0 0 0 ${x4} ${y4}Z" fill="${c}" stroke="#fff" stroke-width="2"/>`;
+  if(labels)s+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central" font-family="IBM Plex Mono,monospace" font-size="13" font-weight="600" fill="${fc}" pointer-events="none">${RYB[i][1]}</text>`;
+  if(given.includes(i))s+=`<circle cx="${lx}" cy="${ly}" r="19" fill="#fff" stroke="#111" stroke-width="2" pointer-events="none"/><text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central" font-size="16" fill="#111" pointer-events="none">★</text>`;
+  if(sel.includes(i)&&!right.includes(i)&&!wrong.includes(i))s+=`<circle cx="${lx}" cy="${ly}" r="21" fill="none" stroke="#fff" stroke-width="5" pointer-events="none"/><circle cx="${lx}" cy="${ly}" r="21" fill="none" stroke="#111" stroke-width="2" pointer-events="none"/>`;
+  if(right.includes(i))s+=`<circle cx="${lx}" cy="${ly}" r="21" fill="none" stroke="#fff" stroke-width="7" pointer-events="none"/><circle cx="${lx}" cy="${ly}" r="21" fill="none" stroke="#1E7547" stroke-width="4" pointer-events="none"/>`;
+  if(wrong.includes(i))s+=`<circle cx="${lx}" cy="${ly}" r="19" fill="#fff" stroke="#B3261E" stroke-width="3" pointer-events="none"/><text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central" font-size="18" font-weight="700" fill="#B3261E" pointer-events="none">✕</text>`;
+  if(dots.includes(i))s+=`<circle cx="${lx}" cy="${ly}" r="11" fill="#fff" stroke="#111" stroke-width="2" pointer-events="none"/>`;
+  s+=`</g>`}
+ if(dots.length>1){const pts=dots.map(i=>pt(108,i*30).join(",")).join(" ");s=s.replace(/^/,"")+`<polygon points="${pts}" fill="none" stroke="#111" stroke-width="1.5" stroke-dasharray="4 3" pointer-events="none"/>`}
+ s+=`<circle r="${R0-4}" fill="#fff"/>`+center.map((t,i)=>`<text y="${(i-(center.length-1)/2)*18}" text-anchor="middle" dominant-baseline="central" font-family="IBM Plex Sans,Arial" font-size="${i===0?11:14}" font-weight="${i===0?500:600}" fill="${i===0?"#5a6574":"#17202b"}" letter-spacing="${i===0?".06em":"0"}">${esc(t)}</text>`).join("");
+ return `<svg viewBox="-160 -160 320 320" role="img" aria-label="RYB color wheel">${s}</svg>`}
+
+/* ═════════ ARTBOARDS ═════════ */
+function frame(letter,label,cls,a){return `<figure class="frame ${cls}">${letter?`<figcaption><span class="tag">${letter}</span>${label}</figcaption>`:""}<div class="paste"><div class="fit" data-w="${a.w}" data-h="${a.h}"><div class="art" style="width:${a.w}px;height:${a.h}px;background:${a.bg}">${a.body}</div></div></div></figure>`}
+function fitAll(){document.querySelectorAll(".fit").forEach(f=>{const w=+f.dataset.w,h=+f.dataset.h,av=f.clientWidth;if(!av)return;const s=Math.min(1.3,av/w),art=f.firstElementChild;art.style.transform=`scale(${s})`;art.style.left=((av-w*s)/2)+"px";f.style.height=(h*s)+"px"})}
+new ResizeObserver(fitAll).observe($("stage"));
+
+/* ═════════ ACTIVITY: WHEEL LAB ═════════ */
+const WQ=[
+ {k:"primary",n:1,f:()=>({ask:"Select the three primary colors on the RYB wheel.",given:[],ans:[0,4,8],need:3,exp:"Red, yellow, and blue are the RYB primaries. They sit every fourth step, so they form a triangle.",term:"primary"})},
+ {k:"secondary",n:1,f:()=>({ask:"Select the three secondary colors.",given:[],ans:[2,6,10],need:3,exp:"Orange, violet, and green are the secondaries. Each sits halfway between the two primaries that mix to make it.",term:"secondary"})},
+ {k:"tertiary",n:1,f:()=>{const t=pick([1,3,5,7,9,11]);return{ask:`Select the tertiary color between ${nm(t-1)} and ${nm(t+1)}.`,given:[],ans:[t],need:1,exp:`${nm(t)} is a tertiary: a primary mixed with its neighboring secondary. Its name lists the primary first.`,term:"tertiary"}}},
+ {k:"comp",n:2,f:b=>({ask:`Select the complement of ${nm(b)}.`,given:[b],ans:[b+6],need:1,exp:`${nm(b)} and ${nm(b+6)} sit directly opposite each other, six steps apart. On the RYB wheel, every primary's complement is the secondary made from the other two primaries.`,term:"comp"})},
+ {k:"analog",n:2,f:b=>({ask:`Build an analogous palette: select the two hues on either side of ${nm(b)}.`,given:[b],ans:[b-1,b+1],need:2,exp:`${nm(b-1)}, ${nm(b)}, and ${nm(b+1)} are neighbors, so the palette is analogous.`,term:"analog"})},
+ {k:"split",n:3,f:b=>({ask:`Build a split-complementary palette from ${nm(b)}: select its two colors.`,given:[b],ans:[b+5,b+7],need:2,exp:`${nm(b)}'s complement is ${nm(b+6)}. Split-complementary skips the complement and uses its two neighbors: ${nm(b+5)} and ${nm(b+7)}.`,term:"split"})},
+ {k:"triad",n:3,f:b=>({ask:`Build a triad from ${nm(b)}: select the other two colors.`,given:[b],ans:[b+4,b+8],need:2,exp:`A triad takes every fourth step: ${nm(b)}, ${nm(b+4)}, and ${nm(b+8)} form an equilateral triangle.`,term:"triad"})},
+ {k:"square",n:4,f:b=>({ask:`Build a square palette from ${nm(b)}: select the other three colors.`,given:[b],ans:[b+3,b+6,b+9],need:3,exp:`A square takes every third step: ${nm(b)}, ${nm(b+3)}, ${nm(b+6)}, and ${nm(b+9)}.`,term:"square"})},
+ {k:"rect",n:4,f:b=>({ask:`Build a tetradic (rectangle) palette from ${nm(b)} and ${nm(b+2)}: select the other two colors.`,given:[b,b+2],ans:[b+6,b+8],need:2,exp:`A rectangle is two complementary pairs: ${nm(b)} with ${nm(b+6)}, and ${nm(b+2)} with ${nm(b+8)}.`,term:"rect"})}
+];
+function wheelRound(){
+ const lvl=chall?4:Math.min(4,1+Math.floor((P.counts.wheel||0)/4)),pool=WQ.filter(q=>q.n<=lvl);const q=pick(pool),b=Math.floor(Math.random()*12),Q=q.f(b);Q.given=Q.given.map(md);Q.ans=Q.ans.map(md);let sel=[];
+ const labels=()=>chall?false:labelsOn;
+ const draw=(extra={})=>{$("stage").innerHTML=`<div class="wheelBox">${wheelSVG({sel,given:Q.given,labels:labels(),click:!R.answered,center:Q.given.length?["BASE",nm(Q.given[0])]:["RYB","wheel"],...extra})}</div>`;bind()};
+ const bind=()=>{$("stage").querySelectorAll(".wg").forEach(g=>{const tog=()=>{const i=+g.dataset.i;if(R.answered||Q.given.includes(i))return;sel=sel.includes(i)?sel.filter(x=>x!==i):sel.length<Q.need?[...sel,i]:[...sel.slice(1),i];draw();$("checkBtn").disabled=sel.length!==Q.need;$("status").textContent=`${sel.length} of ${Q.need} selected`;const el=$("stage").querySelector(`.wg[data-i="${i}"]`);el&&el.focus()};g.onclick=tog;g.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();tog()}}})};
+ return{type:"wheel",label:`Wheel Lab · level ${lvl}`,title:Q.ask,piece:"Click wedges on the wheel. ★ marks colors that are given.",
+  ctrl:()=>chall?"":`<label class="tg"><input type="checkbox" id="lblT" ${labelsOn?"checked":""}> Show color names on the wheel</label><span>(+5 XP when names are hidden)</span>`,
+  bindCtrl(){const t=$("lblT");if(t)t.onchange=()=>{labelsOn=t.checked;draw()}},
+  render(){draw();$("status").textContent=`0 of ${Q.need} selected`},
+  check(){const ok=sel.length===Q.ans.length&&sel.every(i=>Q.ans.includes(i));const pts=award(ok,10+(labels()?0:5));
+   draw({right:Q.ans,wrong:sel.filter(i=>!Q.ans.includes(i)),labels:true});
+   const t=TERM[Q.term];return{ok,pts,term:Q.term,title:t?t[1]:"",html:`<div class="diff"><span>Answer</span>${Q.ans.map(nm).join(", ")}</div><p>${esc(Q.exp)}</p>${t&&t[3]?`<p class="muted">${esc(t[3])}. Try the same base color in Adobe Color's wheel and compare.</p>`:""}`}}}
+}
+
+/* ═════════ ACTIVITY: NAME THE HARMONY ═════════ */
+const HARM=[["mono","Monochromatic",[0]],["analog","Analogous",[-1,0,1]],["comp","Complementary",[0,6]],["split","Split-complementary",[0,5,7]],["triad","Triadic",[0,4,8]],["square","Square",[0,3,6,9]]];
+const TITLES=[["NIGHT","MARKET","Fridays · 6–10 PM · Pier 4"],["FIELD","DAY","Saturday · Lincoln Park"],["OPEN","STUDIO","First Fridays · Art Hall"],["BOOK","FAIR","Oct 3–4 · Main Library"],["FILM","NIGHT","Thursdays · The Lot"]];
+function harmonyRound(){
+ const h=pick(HARM),b=Math.floor(Math.random()*12),hard=chall||hardHarmony;let hues=h[2].map(o=>md(b+o)),pal;
+ if(h[0]==="mono")pal=[shade(hx(b),.5),hx(b),tint(hx(b),.45)];
+ else pal=hues.map(i=>hard?pick([hx(i),tint(hx(i),.35),shade(hx(i),.3),tone(hx(i),.25)]):hx(i));
+ const T=pick(TITLES),bg=h[0]==="mono"?tint(hx(b),.84):tint(pal[0],.8),circ=pal[h[0]==="mono"?1:Math.min(1,pal.length-1)],band=pal[h[0]==="mono"?0:(pal.length>2?2:0)],btn=pal[pal.length-1]===band?shade(pal[pal.length-1],.2):pal[pal.length-1];
+ const shapes=h[0]==="square"?`<div class="ab" style="left:24px;top:212px;width:60px;height:60px;border-radius:50%;background:${pal[3]}"></div>`:"";
+ const art={w:300,h:380,bg,body:`<div class="ab" style="right:-40px;top:176px;width:170px;height:170px;border-radius:50%;background:${circ}"></div>
+  <div class="ab" style="left:0;right:0;bottom:0;height:96px;background:${band}"></div>${shapes}
+  <div class="ab" style="left:24px;top:40px;font:800 50px/.92 ${SA};color:#161616">${T[0]}<br>${T[1]}</div>
+  <div class="ab" style="left:24px;top:160px;font:600 14px/1.3 ${SA};color:#161616">${T[2]}</div>
+  <div class="ab" style="left:24px;bottom:30px;background:${btn};color:${onColor(btn)};border-radius:6px;padding:10px 14px;font:700 13px/1 ${SA};box-shadow:0 0 0 2px #fff">Get tickets</div>`};
+ const opts=shuffle([h,...shuffle(HARM.filter(x=>x!==h)).slice(0,3)]);
+ return{type:"harmony",label:`Name the Harmony · ${hard?"mixed values":"pure hues"}`,title:"Which color relationship does this poster use?",piece:"Ignore the neutrals (the dark text and white edges). Tints and shades of a hue count as the same hue.",
+  ctrl:()=>chall?"":`<label class="tg"><input type="checkbox" id="hardT" ${hardHarmony?"checked":""}> Mixed values: tints, shades, and tones (+5 XP)</label>`,
+  bindCtrl(){const t=$("hardT");if(t)t.onchange=()=>{hardHarmony=t.checked;newRound()}},
+  render(){$("stage").innerHTML=`<div class="split"><div>${frame("","","",art)}</div><div><div class="wheelBox" id="hWheel" style="min-height:120px;color:var(--muted);font-size:13px;text-align:center">The wheel will show where these hues sit after you answer.</div><div class="swatches">${pal.map(c=>`<span style="background:${c}" title="${c}"></span>`).join("")}</div><p>Palette (neutrals not shown)</p></div></div>`;fitAll();
+   $("fs").hidden=false;$("legend").textContent="Choose the relationship";$("opts").innerHTML=opts.map((o,i)=>`<label class="opt" for="o${i}"><input type="radio" name="o" id="o${i}" value="${i}"><span>${o[1]}</span><span class="why" hidden></span></label>`).join("");
+   $("opts").querySelectorAll("input").forEach(r=>r.onchange=()=>$("checkBtn").disabled=false)},
+  check(){const sel=+$("opts").querySelector("input:checked").value,ok=opts[sel]===h,pts=award(ok,10+(hard?5:0));
+   $("opts").querySelectorAll(".opt").forEach((l,i)=>{l.classList.add("locked");l.querySelector("input").disabled=true;if(opts[i]===h)l.classList.add("right");else if(i===sel)l.classList.add("wrong")});
+   $("hWheel").innerHTML=wheelSVG({dots:[...new Set(hues)],labels:true,center:["HUES",h[1]]});
+   const t=TERM[h[0]];return{ok,pts,term:h[0],title:h[1],html:`<div class="diff"><span>Hues</span>${[...new Set(hues)].map(nm).join(" · ")}</div><p>${esc(t[2])}</p>${t[3]?`<p class="muted">${esc(t[3])}</p>`:""}`}}}
+}
+
+/* ═════════ ACTIVITY: COLOR DETECTIVE ═════════ */
+function detRound(c){
+ const opts=shuffle([{t:c.yes,ok:true},...c.no.map(([t,w])=>({t,ok:false,w}))]);
+ return{type:"detective",c,label:chall?"Color Detective":`Case ${String(c.n).padStart(2,"0")} of ${D.length}`,title:"What changed between A and B?",piece:c.piece,
+  ctrl:()=>chall?"":`<span class="lbl">Cases</span><select id="detSel"><option value="all">All ${D.length} cases</option>${VOCAB[3][1].filter(t=>D.some(c=>c.issue===t[0])).map(t=>`<option value="${t[0]}" ${detScope===t[0]?"selected":""}>${t[1]} (3)</option>`).join("")}</select>`,
+  bindCtrl(){const s=$("detSel");if(s){s.value=detScope;s.onchange=()=>{detScope=s.value;detDeck=[];detPos=0;newRound()}}},
+  render(){$("stage").innerHTML=`<div class="compare" id="cmp">${frame("A","Problem","bad",c.html(true))}${frame("B","Corrected","good",c.html(false))}</div>`;fitAll();
+   $("hintRow").hidden=!!chall;$("fs").hidden=false;$("legend").textContent="Which color fix turned A into B?";
+   $("opts").innerHTML=opts.map((o,i)=>`<label class="opt" for="o${i}"><input type="radio" name="o" id="o${i}" value="${i}"><span>${esc(o.t)}</span><span class="why" hidden></span></label>`).join("");
+   $("opts").querySelectorAll("input").forEach(r=>r.onchange=()=>$("checkBtn").disabled=false)},
+  check(){const sel=+$("opts").querySelector("input:checked").value,ok=opts[sel].ok,pts=award(ok,15);
+   $("opts").querySelectorAll(".opt").forEach((l,i)=>{const o=opts[i],w=l.querySelector(".why");l.classList.add("locked");l.querySelector("input").disabled=true;
+    if(o.ok){l.classList.add("right");w.innerHTML="<b>Applied</b>This is the fix that turns A into B."}else{if(i===sel)l.classList.add("wrong");w.innerHTML=`<b class="no">Not applied</b>${esc(o.w)}`}w.hidden=false});
+   if(!chall){$("cmp").classList.add("hinting");$("hintBtn").setAttribute("aria-pressed","true")}
+   if(ok&&!P.det[c.id]){P.det[c.id]=true;save()}
+   const d=typeof c.diff==="function"?c.diff():c.diff;
+   return{ok,pts,term:c.issue,title:c.title,html:`${ok?"":`<p>The fix was: <b>${esc(c.yes)}</b></p>`}<div class="diff"><span>What changed</span>${esc(d)}</div><p>${esc(c.why)}</p>`}}}
+}
+function nextDet(){const pool=D.filter(c=>detScope==="all"||c.issue===detScope);if(detPos>=detDeck.length){detDeck=shuffle(pool);detPos=0}return detRound(detDeck[detPos++])}
+
+/* ═════════ ACTIVITY: CONTRAST REPAIR ═════════ */
+function contrastRound(){
+ let sc,tries=0;
+ do{tries++;const bh=Math.floor(Math.random()*12),bv=pick(["tint","pure","shade"]),bg=bv==="tint"?tint(hx(bh),.72):bv==="shade"?shade(hx(bh),.45):hx(bh),th=pick([bh,bh+6,bh+1,bh-1]),big=Math.random()<.4,target=big?3:4.5,adj=Math.random()<.7?"text":"bg";
+  const col=s=>{const base=adj==="text"?hx(th):hx(bh);return s<0?shade(base,-s/100*.92):tint(base,s/100*.94)};
+  const fixed=adj==="text"?bg:hx(th),rat=s=>adj==="text"?ratio(col(s),bg):ratio(fixed,col(s));
+  const all=[];for(let s=-100;s<=100;s+=4)all.push([s,rat(s)]);const bad=all.filter(([,r])=>r>1.15&&r<Math.min(2.3,target-.8));
+  if(bad.length&&Math.max(...all.map(a=>a[1]))>=target+.5)sc={bh,th,bg,big,target,adj,col,fixed,rat,start:pick(bad)[0]}}while(!sc&&tries<60);
+ if(!sc)return contrastRound();
+ let s=sc.start;const piece=pick([["Event card","Harvest Supper","Join us for a farm-to-table dinner under the big tent. Tickets include three courses and live music."],["Museum web page","New Galleries Open","Four renovated rooms bring the collection's textiles and ceramics back on view this spring."],["Class handout","Studio Safety","Wear closed-toe shoes, tie back long hair, and ask before using the press or the cutter."]]);
+ const colors=()=>sc.adj==="text"?{fg:sc.col(s),bg:sc.bg}:{fg:sc.fixed,bg:sc.col(s)};
+ const draw=()=>{const {fg,bg}=colors(),r=ratio(fg,bg);$("cArt").innerHTML=`<div style="background:${bg};padding:24px;border-radius:8px;min-height:220px"><div style="font:700 11px/1 ${SA};letter-spacing:.16em;color:${fg};margin-bottom:10px">${piece[0].toUpperCase()}</div>${sc.big?`<div style="font:800 34px/1.05 ${SA};color:${fg}">${piece[1]}</div>`:`<div style="font:700 20px/1.15 ${SE};color:${fg};margin-bottom:10px">${piece[1]}</div><p style="margin:0;font:400 15px/1.55 ${SE};color:${fg}">${piece[2]}</p>`}</div>`;
+  $("cRatio").innerHTML=`${r.toFixed(2)}<small>: 1</small>`;$("cPills").innerHTML=[["AA large text",3],["AA body text",4.5],["AAA body text",7]].map(([l,t])=>`<span class="${r>=t?"pass":"fail"}">${r>=t?"✓":"✕"} ${l} ${t}:1</span>`).join("");
+  $("cHex").textContent=`Text ${fg} on background ${bg}`;$("checkBtn").disabled=false};
+ return{type:"contrast",label:"Contrast Repair",title:sc.big?`Make the headline pass ${sc.target}:1 (large text)`:`Make the text pass ${sc.target}:1 (body text)`,
+  piece:sc.adj==="text"?`Adjust the text's value. Keep its hue (${nm(sc.th)}); you only choose how light or dark it is.`:`Adjust the background's value. Keep its hue (${nm(sc.bh)}); you only choose how light or dark it is.`,
+  ctrl:()=>"",bindCtrl(){},
+  render(){$("stage").innerHTML=`<div class="split"><div id="cArt"></div><div class="meter"><div><div class="lbl" style="font:500 11px/1 var(--mono);letter-spacing:.06em;color:var(--muted);margin-bottom:6px">CONTRAST RATIO</div><div class="ratio" id="cRatio"></div></div><div class="pills" id="cPills"></div>
+   <label for="cSlide" style="font-weight:600;font-size:13px">${sc.adj==="text"?"Text":"Background"} value</label><input type="range" id="cSlide" min="-100" max="100" step="1" value="${s}"><div class="ends"><span>Darker (shade)</span><span>Lighter (tint)</span></div><div class="hexes" id="cHex"></div></div></div>`;
+   $("cSlide").oninput=e=>{s=+e.target.value;draw()};draw()},
+  check(){const {fg,bg}=colors(),r=ratio(fg,bg),ok=r>=sc.target;
+   if(!ok){$("feedback").innerHTML=`<div class="verdict"><span class="pill no">Not yet</span><span>${r.toFixed(2)}:1 is below ${sc.target}:1. Move the slider away from the ${sc.adj==="text"?"background's":"text's"} value, toward the darker or lighter end.</span></div>`;P.streak=0;save();renderRank();return null}
+   $("cSlide").disabled=true;const pts=award(true,10+(r<sc.target+1.5?5:0));
+   return{ok,pts,term:"ratio",title:"Contrast repaired",html:`<div class="diff"><span>Result</span>${fg} on ${bg} · ${r.toFixed(2)}:1</div><p>You kept the hue and changed only its value, which is usually the first fix to try. ${r<sc.target+1.5?"You stayed close to the minimum, so more of the color's character survives (+5 XP).":"A value closer to the minimum would keep more of the color's character."}</p><p class="muted">Try the Grayscale view: passing text still reads clearly with all hue removed.</p>`}}}
+}
+
+/* ═════════ ROUND RUNNER ═════════ */
+const GEN={wheel:wheelRound,harmony:harmonyRound,detective:nextDet,contrast:contrastRound};
+function newRound(type){
+ type=type||(chall?chall.list[chall.i]:tab);R=chall&&type==="detective"?detRound(chall.det.pop()):GEN[type]();R.answered=false;
+ $("caseLabel").textContent=chall?`Challenge · question ${chall.i+1} of ${chall.n}`:R.label;$("progress").textContent=chall?`Score ${chall.score}`:"";
+ $("caseTitle").textContent=R.title;$("piece").textContent=R.piece;$("termChip").hidden=true;
+ $("ctrl").innerHTML=`${R.ctrl()}${type!=="wheel"?`<span class="lbl">View</span><span class="mini" role="group" aria-label="Color vision view">${[["normal","Normal"],["gray","Grayscale"],["deut","Deuteranopia"],["prot","Protanopia"],["trit","Tritanopia"]].map(([k,l])=>`<button type="button" data-v="${k}" aria-pressed="${view===k}">${l}</button>`).join("")}</span>`:""}`;
+ $("ctrl").hidden=!$("ctrl").innerHTML.trim();R.bindCtrl();
+ $("ctrl").querySelectorAll("[data-v]").forEach(bt=>bt.onclick=()=>{view=bt.dataset.v;applyView();$("ctrl").querySelectorAll("[data-v]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.v===view))});
+ applyView();
+ $("fs").hidden=true;$("hintRow").hidden=true;$("hintBtn").setAttribute("aria-pressed","false");$("feedback").innerHTML="";$("status").textContent="";
+ $("checkBtn").hidden=false;$("checkBtn").disabled=true;$("nextBtn").hidden=true;
+ R.render();document.querySelectorAll(".term.on").forEach(t=>t.classList.remove("on"));
+}
+function applyView(){$("stage").className=type2view()}
+function type2view(){return R&&R.type==="wheel"?"":view==="normal"?"":"v-"+view}
+function check(){
+ if(!R||R.answered)return;const res=R.check();if(!res)return;R.answered=true;
+ $("caseTitle").textContent=res.title||R.title;const t=TERM[res.term];if(t){$("termChip").textContent=t[1];$("termChip").hidden=false;highlight(res.term)}
+ P.counts[R.type]=(P.counts[R.type]||0)+1;save();
+ $("feedback").innerHTML=`<div class="verdict">${res.ok?'<span class="pill ok">Correct</span>':'<span class="pill no">Not quite</span>'}${res.pts?`<span class="pill xp">+${res.pts} XP</span>`:""}${P.streak>=3&&res.ok?`<span class="pill xp">Streak ${P.streak}</span>`:""}</div>${res.html}`;
+ if(chall){if(res.ok)chall.score++;else chall.missed.push({type:R.type,t:R.type==="detective"?R.c.piece:res.title,fix:R.type==="detective"?R.c.yes:(t?t[1]:"")});$("progress").textContent=`Score ${chall.score}`}
+ renderTerms();if(t)highlight(res.term);
+ $("checkBtn").hidden=true;$("nextBtn").hidden=false;$("nextBtn").textContent=chall&&chall.i+1>=chall.n?"See results":"Next";$("nextBtn").focus({preventScroll:true});$("status").textContent="";
+}
+function next(){if(chall){if(chall.i+1>=chall.n)return results();chall.i++}newRound();const r=$("play").getBoundingClientRect();if(r.top<0)$("play").scrollIntoView({block:"start",behavior:reduced?"auto":"smooth"})}
+
+/* ═════════ CHALLENGE ═════════ */
+function renderSetup(){$("lengths").innerHTML=[9,15,24].map(n=>`<button type="button" data-n="${n}"><b>${n}</b><small>${n/3} of each type</small></button>`).join("");$("lengths").querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>startChallenge(+b.dataset.n))}
+function startChallenge(n){const k=n/3;chall={n,i:0,score:0,missed:[],list:shuffle([...Array(k).fill("wheel"),...Array(k).fill("harmony"),...Array(k).fill("detective")]),det:shuffle(D).slice(0,k)};$("setup").hidden=true;$("play").hidden=false;$("results").hidden=true;newRound()}
+function results(){const c=chall,pct=Math.round(c.score/c.n*100);chall=null;$("play").hidden=true;
+ $("results").innerHTML=`<p class="meta" style="margin:0">Challenge complete</p><div class="big">${c.score} / ${c.n}</div><p class="muted" style="margin:0">${pct}% correct · points were doubled</p>`+
+ (c.missed.length?`<h2 style="margin-top:20px;font-size:20px">Review these</h2><ul class="missed">${c.missed.map(m=>`<li><b>${esc(m.t)}</b> · ${m.type==="wheel"?"Wheel Lab":m.type==="harmony"?"Name the Harmony":"Color Detective"}<small>${esc(m.fix)}</small></li>`).join("")}</ul>`:`<p style="margin-top:14px">Every answer correct.</p>`)+
+ `<div class="actions"><button type="button" class="primary" id="againBtn">New challenge</button><button type="button" class="secondary" id="backBtn">Back to Wheel Lab</button></div>`;
+ $("results").hidden=false;$("againBtn").onclick=()=>setTab("challenge");$("backBtn").onclick=()=>setTab("wheel")}
+
+function setTab(t){tab=t;chall=null;document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tab===t));$("results").hidden=true;
+ if(t==="challenge"){$("play").hidden=true;$("setup").hidden=false;renderSetup()}else{$("setup").hidden=true;$("play").hidden=false;newRound()}}
+
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+$("checkBtn").onclick=check;$("nextBtn").onclick=next;
+$("hintBtn").onclick=()=>{const c=$("cmp");if(!c)return;const on=c.classList.toggle("hinting");$("hintBtn").setAttribute("aria-pressed",on)};
+$("resetBtn").onclick=()=>{P={xp:0,streak:0,best:0,det:{},counts:{}};save();renderRank();renderTerms()};
+renderRank();renderTerms();setTab("wheel");
+</script>
+
+</body>
+</html>
