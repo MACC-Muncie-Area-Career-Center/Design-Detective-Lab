@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Composition Detective: 50 before-and-after cases for the principles of design and Gestalt, plus an eye-path game.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2317202b'/%3E%3Crect x='12' y='12' width='24' height='24' fill='%23eef1f5'/%3E%3Ccircle cx='44' cy='44' r='8' fill='%23E0262F'/%3E%3C/svg%3E">
+<style>html,body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Composition Detective</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:wght@500;600&family=Oswald:wght@500;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Source+Serif+4:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: masthead with rank meter, activity tabs, practice toolbar, then the case card (artboards on a pasteboard + answers) beside a sticky concept rail. Artboards depict real pieces, so their colors are fixed. */
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --stage:#d9dee6; --paste:#c9cfd8; --ink:#17202b; --muted:#5a6574; --line:#d3d9e1;
+  --pencil:#2f62c9; --pencil-soft:#e2eafb;
+  --good:#1e7547; --good-soft:#e3f3ea; --bad:#b3261e; --bad-soft:#fbe8e6;
+  --display:"Newsreader",Georgia,serif; --ui:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11151b; --surface:#19202a; --stage:#0b0e12; --paste:#2a313b; --ink:#e6eaf0; --muted:#9aa5b3; --line:#2b3441;
+  --pencil:#86a8ff; --pencil-soft:#1e2a44; --good:#62c994; --good-soft:#15301f; --bad:#ff8d84; --bad-soft:#3a1d1b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11151b; --surface:#19202a; --stage:#0b0e12; --paste:#2a313b; --ink:#e6eaf0; --muted:#9aa5b3; --line:#2b3441;
+  --pencil:#86a8ff; --pencil-soft:#1e2a44; --good:#62c994; --good-soft:#15301f; --bad:#ff8d84; --bad-soft:#3a1d1b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--ui)}
+.wrap{max-width:1260px;margin:0 auto;padding-inline:clamp(16px,3vw,32px);padding-block:24px 48px}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--pencil);outline-offset:2px}
+.mast{display:flex;flex-wrap:wrap;gap:16px 32px;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:18px}
+.kicker{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--pencil);margin:0 0 10px}
+h1{font:600 clamp(32px,5vw,46px)/1.02 var(--display);letter-spacing:-.01em;margin:0 0 10px}
+.lede{margin:0;max-width:66ch;color:var(--muted)}
+.rank{min-width:240px;display:grid;gap:6px}
+.rank .rn{display:flex;justify-content:space-between;gap:10px;font-weight:600}
+.rank .rn span:last-child{font:500 12px/1.6 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{height:8px;background:var(--line);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ink);transition:width .4s}
+.rank small{color:var(--muted);font-size:12.5px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.tabs button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 16px;font-weight:600;color:var(--muted)}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:24px;align-items:start}
+main{min-width:0;display:grid;gap:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:clamp(16px,2.4vw,24px);min-width:0}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font:500 12px/1.2 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.titleRow{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;margin:8px 0 6px}
+h2{font:600 24px/1.2 var(--display);margin:0;text-wrap:balance}
+.piece{margin:0 0 14px;color:var(--muted);font-size:14.5px}
+.chip{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:999px;background:var(--pencil-soft);color:var(--pencil)}
+.ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 12px;font-size:13px;color:var(--muted)}
+.ctrl .lbl{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.mini{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.mini button{border:0;background:var(--surface);padding:6px 11px;font-size:12.5px;font-weight:500;color:var(--muted)}
+.mini button+button{border-left:1px solid var(--line)}
+.mini button[aria-pressed="true"]{background:var(--pencil-soft);color:var(--pencil)}
+.ctrl label.tg{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+select{padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--surface);max-width:100%}
+
+.stageWrap{container:stage/inline-size;background:var(--stage);padding:14px;border-radius:8px}
+#stage.squint .art{filter:blur(3.5px)}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.compare.wide{grid-template-columns:1fr}
+@container stage (max-width:600px){.compare{grid-template-columns:1fr}}
+.frame{margin:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface);min-width:0}
+.frame figcaption{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font:500 12px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tag{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:4px;font-weight:600}
+.frame.bad .tag{background:var(--bad-soft);color:var(--bad)}
+.frame.good .tag{background:var(--good-soft);color:var(--good)}
+.paste{background:var(--paste);padding:18px}
+.fit{position:relative;width:100%}
+.art{position:absolute;top:0;left:0;transform-origin:0 0;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.25),0 6px 18px rgba(0,0,0,.12);font-family:"Source Sans 3","Helvetica Neue",Arial,sans-serif;color:#1c1c1c;text-align:left}
+.art *{margin:0}
+.ab{position:absolute}
+.ph{position:relative;overflow:hidden;background:linear-gradient(165deg,var(--a,#9cc0d6),var(--b,#e4d3b0))}
+.ph.ab{position:absolute}
+.ph::before{content:"";position:absolute;width:22%;aspect-ratio:1;border-radius:50%;background:rgba(255,250,235,.8);right:16%;top:14%}
+.ph::after{content:"";position:absolute;left:-15%;right:-15%;bottom:-38%;height:70%;background:rgba(35,60,52,.4);border-radius:50% 50% 0 0}
+.compare.hinting .lk{outline:2px dashed #d61f8c;outline-offset:3px}
+.single{max-width:460px;margin:0 auto}
+.ep{cursor:pointer}
+.ep:hover{outline:2px solid rgba(47,98,201,.45);outline-offset:2px}
+.badge{position:absolute;width:26px;height:26px;border-radius:50%;background:#2f62c9;color:#fff;font:700 14px/26px var(--ui);text-align:center;box-shadow:0 0 0 2px #fff;z-index:9;pointer-events:none}
+.badge.want{background:#1e7547}
+.badge.miss{background:#b3261e}
+
+.hintRow{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.ghost{background:none;border:1px solid var(--line);border-radius:6px;padding:7px 12px;font-size:13px;font-weight:500;color:var(--muted)}
+.ghost[aria-pressed="true"]{border-color:var(--pencil);color:var(--pencil)}
+fieldset{border:0;padding:0;margin:18px 0 0;min-width:0}
+legend{font-weight:600;margin-bottom:10px;padding:0}
+.opts{display:grid;gap:8px}
+.opts.grid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.opt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;align-items:start;padding:12px 14px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:pointer}
+.opt input{margin:3px 0 0;accent-color:var(--pencil);width:17px;height:17px}
+.opt:has(input:checked){border-color:var(--pencil);box-shadow:inset 0 0 0 1px var(--pencil)}
+.opt.right{border-color:var(--good);background:var(--good-soft);box-shadow:none}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);box-shadow:none}
+.opt.locked{cursor:default}
+.why{grid-column:2;font-size:13.5px;color:var(--muted)}
+.why b{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;margin-right:6px}
+.opt.right .why b{color:var(--good)} .opt .why b.no{color:var(--bad)}
+#feedback:empty{display:none}
+#feedback{margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-radius:8px;display:grid;gap:8px}
+.verdict{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+.pill{font:600 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:999px}
+.pill.ok{background:var(--good-soft);color:var(--good)} .pill.no{background:var(--bad-soft);color:var(--bad)} .pill.xp{background:var(--pencil-soft);color:var(--pencil)}
+.diff{font-family:var(--mono);font-size:13px;background:var(--stage);padding:8px 10px;border-radius:6px;overflow-x:auto}
+.diff span{color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:11px;margin-right:8px}
+#feedback p{margin:0}
+#feedback ol{margin:0;padding-left:20px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;align-items:center}
+.primary{background:var(--ink);color:var(--bg);border:0;border-radius:7px;padding:11px 20px;font-weight:600}
+.primary:disabled{opacity:.4;cursor:not-allowed}
+.secondary{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:10px 18px;font-weight:600}
+.status{font-size:13px;color:var(--muted)}
+.lengths{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.lengths button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:14px 22px;min-width:110px;text-align:left}
+.lengths b{display:block;font:600 26px/1 var(--display)}
+.lengths small{color:var(--muted)}
+.muted{color:var(--muted)}
+.big{font:600 64px/1 var(--display);margin:10px 0 4px;font-variant-numeric:tabular-nums}
+.missed{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:8px}
+.missed li{border:1px solid var(--line);border-radius:7px;padding:10px 12px}
+.missed small{display:block;color:var(--muted)}
+.vocab{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.vocab h2{font-size:20px}
+.vocab>p{font-size:12.5px;color:var(--muted);margin:6px 0 10px}
+.group{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--pencil);margin:14px 0 6px}
+.terms{display:grid;gap:4px}
+.term{display:block;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:7px;padding:7px 9px;transition:background .2s}
+button.term:hover{background:var(--bg)}
+.term .tn{display:flex;justify-content:space-between;gap:8px;font-weight:600;font-size:13.5px}
+.term .tp{font:500 11px/1.6 var(--mono);color:var(--muted);white-space:nowrap}
+.term .tp.done{color:var(--good)}
+.term .td{display:block;margin-top:2px;font-size:12.5px;line-height:1.45;color:var(--muted)}
+.term.on{background:var(--pencil-soft);border-color:var(--pencil)}
+.term.sel{border-color:var(--line)}
+.reset{margin-top:12px;background:none;border:0;padding:0;font-size:12px;color:var(--muted);text-decoration:underline}
+.colophon{margin-top:28px;font-size:12px;color:var(--muted);max-width:90ch}
+@media (max-width:980px){.layout{grid-template-columns:1fr}.vocab{position:static;max-height:none}.terms{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <a href="../" style="display:inline-block;margin:0 0 14px;font:500 13px/1 'IBM Plex Sans',system-ui,sans-serif;color:var(--pencil);text-decoration:none">← All Design Detective apps</a>
+<header class="mast">
+    <div>
+      <p class="kicker">Principles of design · Gestalt</p>
+      <h1>Composition Detective</h1>
+      <p class="lede">Train your eye for how a design is organized: what you see first, what feels balanced, and what the brain groups together. 50 cases from real design work, plus a game that tests where the eye really goes.</p>
+    </div>
+    <div class="rank" aria-live="polite">
+      <div class="rn"><span id="rankName">Doodler</span><span id="xpText">0 XP</span></div>
+      <div class="bar"><i id="xpBar"></i></div>
+      <small id="streakText">Streak 0 · Best 0</small>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Activities">
+    <button type="button" data-tab="detective" aria-pressed="true">Composition Cases</button>
+    <button type="button" data-tab="eye" aria-pressed="false">Eye Path</button>
+    <button type="button" data-tab="challenge" aria-pressed="false">Challenge</button>
+  </nav>
+
+  <div class="layout">
+    <main>
+      <section id="setup" class="card" hidden>
+        <h2>Challenge mode</h2>
+        <p class="muted" style="margin:6px 0 0">A mixed test of composition cases and Eye Path layouts. No hints and no squint tool. Double points.</p>
+        <div id="lengths" class="lengths"></div>
+      </section>
+      <section id="play" class="card">
+        <div class="meta"><span id="caseLabel"></span><span id="progress"></span></div>
+        <div class="titleRow"><h2 id="caseTitle"></h2><span id="termChip" class="chip" hidden></span></div>
+        <p id="piece" class="piece"></p>
+        <div id="ctrl" class="ctrl"></div>
+        <div class="stageWrap"><div id="stage"></div></div>
+        <div id="hintRow" class="hintRow" hidden>
+          <button id="squintBtn" type="button" class="ghost" aria-pressed="false">Squint test</button>
+          <button id="hintBtn" type="button" class="ghost" aria-pressed="false">Show where to look</button>
+        </div>
+        <fieldset id="fs" hidden><legend id="legend"></legend><div id="opts" class="opts"></div></fieldset>
+        <div id="feedback" aria-live="polite"></div>
+        <div class="actions">
+          <button id="checkBtn" type="button" class="primary" disabled>Check answer</button>
+          <button id="undoBtn" type="button" class="secondary" hidden>Undo last click</button>
+          <button id="nextBtn" type="button" class="primary" hidden>Next</button>
+          <span id="status" class="status"></span>
+        </div>
+      </section>
+      <section id="results" class="card" hidden></section>
+    </main>
+    <aside class="vocab" aria-labelledby="vocabHead">
+      <h2 id="vocabHead">Concepts</h2>
+      <p>Select a concept to practice all of its cases. The count shows how many you've answered correctly on this device.</p>
+      <div id="terms"></div>
+      <button id="resetBtn" type="button" class="reset">Reset my points and progress</button>
+    </aside>
+  </div>
+  <p class="colophon">The squint test blurs the design so you see shapes and weight instead of words, the way designers check hierarchy. Photos are placeholders; names and places are fictional.</p>
+</div>
+
+<script>
+/* ═════════ CONCEPTS ═════════ */
+const CONCEPTS=[
+ ["Principles of design",[
+  ["emphasis","Emphasis & Focal Point","The element that grabs attention first. One clear focal point, made by size, contrast, isolation, or position."],
+  ["hierarchy","Visual Hierarchy","The order information is read in, set by differences in size, weight, value, and position."],
+  ["scale","Scale","The size of elements relative to each other and to the format. Dramatic scale adds drama and depth."],
+  ["contrast","Contrast","Clear differences in size, weight, shape, or direction. If two things are different, make them very different."],
+  ["balance","Balance","How visual weight is distributed: symmetrical (formal), asymmetrical (counterweights), or radial (from a center)."],
+  ["repetition","Repetition","Reusing the same treatments (styles, shapes, positions) so a piece feels consistent."],
+  ["rhythm","Rhythm","Repetition with a beat: regular, alternating, or progressive patterns that move the eye."],
+  ["whitespace","White Space","Empty space that frames, separates, and gives importance. Open space feels calm; scattered gaps feel trapped."],
+  ["direction","Direction & Movement","Cues that steer the eye: gaze, arrows, diagonals, and reading patterns like the Z and F."]]],
+ ["Gestalt principles",[
+  ["proximity","Proximity","Things near each other are seen as a group."],
+  ["similarity","Similarity","Things that look alike (color, shape, size) are seen as related."],
+  ["closure","Closure","The eye completes an incomplete shape when enough of it is shown."],
+  ["continuation","Continuation","The eye follows lines and sequences and expects them to continue."],
+  ["figureground","Figure–Ground","We separate a figure from its background. Clear value difference or depth keeps the figure readable."],
+  ["region","Common Region","Items inside a shared boundary or background are seen as a group."]]],
+ ["Useful terms",[
+  ["weight","Visual weight","How strongly an element pulls the eye. Large, dark, saturated, textured, or isolated elements weigh more."],
+  ["zpattern","Z and F patterns","Common scanning paths: Z for simple layouts (top left → top right → diagonal → bottom right), F for text-heavy pages."],
+  ["squint","Squint test","Blur your eyes (or the design). What still stands out is your real hierarchy."]]]
+];
+const CN={};CONCEPTS.forEach(([,l])=>l.forEach(t=>CN[t[0]]=t));
+
+/* ═════════ HELPERS FOR ARTBOARDS ═════════ */
+const SE="'Source Serif 4',Georgia,serif",SA="'Source Sans 3','Helvetica Neue',Arial,sans-serif",OS="Oswald,Impact,sans-serif";
+const ph=(style,a,b,cls="ab")=>`<div class="ph ${cls}" style="${style};--a:${a};--b:${b}"></div>`;
+const T=(x,y,st,txt,cls="")=>`<div class="ab ${cls}" style="left:${x}px;top:${y}px;${st}">${txt}</div>`;
+const star=(cx,cy,r,fill)=>{let p=[];for(let i=0;i<10;i++){const a=Math.PI/5*i-Math.PI/2,rr=i%2?r*.45:r;p.push((cx+rr*Math.cos(a)).toFixed(1)+","+(cy+rr*Math.sin(a)).toFixed(1))}return `<polygon points="${p.join(" ")}" fill="${fill}"/>`};
+
+/* ═════════ CASES ═════════ */
+const D=[
+/* ── EMPHASIS ── */
+{c:"emphasis",piece:"Concert poster",title:"Everything shouts the same",
+ html:b=>{const s=(big,small)=>b?`font:600 18px/1.25 ${SA}`:small;return{w:300,h:400,bg:"#1E1B3A",body:`
+ ${T(26,28,`${s(0,`font:600 11px/1 ${SA};letter-spacing:.2em`)};color:#E7B75F`,"LIVE AT THE CLYDE")}
+ ${T(26,58,b?`font:600 18px/1.25 ${SA};color:#F3E9D2`:`font:600 60px/.92 ${OS};text-transform:uppercase;color:#F3E9D2`,b?"Northern Lights":"Northern<br>Lights","lk")}
+ ${T(26,200,`${s(0,`font:400 15px/1.3 ${SA}`)};color:#F3E9D2`,"with special guest Harbor")}
+ ${T(26,318,`${s(0,`font:600 16px/1.3 ${SA}`)};color:#F3E9D2`,"Friday, Nov 14 · 8 PM")}
+ ${T(26,352,`${s(0,`font:400 12px/1.3 ${SA}`)};color:#B9B3D6`,"Tickets $20 · theclyde.com")}`}},
+ yes:"Made the band name the one dominant element",
+ no:[["Changed the background color","The background is the same deep navy in both."],["Centered the text","Everything is still flush left in B."]],
+ diff:"All text 18 px → band name 60 px condensed; supporting lines reduced",
+ why:"When everything is the same size and weight, nothing leads and the eye wanders. One dominant element gives the viewer a place to start."},
+{c:"emphasis",piece:"Photo essay spread",title:"Four photos, no lead",
+ html:b=>{const C=[["#7fa88f","#e8e2c8"],["#8aa4c9","#d7e4f0"],["#c9a27e","#f1e3c6"],["#b59ac9","#f0d6d6"]];const pos=b?[[24,64,180,96],[216,64,180,96],[24,172,180,96],[216,172,180,96]]:[[24,64,250,204],[286,64,110,64],[286,134,110,64],[286,204,110,64]];
+ return{w:420,h:290,bg:"#FFFFFF",body:`${T(24,22,`font:700 20px/1 ${SE}`,"Wild Coast: A Photo Essay")}${pos.map((p,i)=>ph(`left:${p[0]}px;top:${p[1]}px;width:${p[2]}px;height:${p[3]}px`,C[i][0],C[i][1],"ab lk")).join("")}`}},
+ yes:"Made one photo dominant and the others supporting",
+ no:[["Added more photos","There are four photos in both."],["Changed the photos' colors","Each photo uses the same colors in both."]],
+ diff:"4 equal photos → 1 hero photo + 3 small",
+ why:"A grid of equal images reads as a contact sheet. Making one image dominant tells the viewer where the story begins."},
+{c:"emphasis",piece:"Magazine cover",title:"Two focal points fighting",
+ html:b=>({w:300,h:400,bg:"#FFFFFF",body:`${ph("left:0;top:0;width:300px;height:400px","#e7b46a","#f6e3c2")}
+ ${T(22,18,`font:600 72px/1 ${OS};color:#1C1C1C;letter-spacing:.02em`,"ORBIT")}
+ ${T(22,112,`font:600 12px/1.3 ${SA};color:#1C1C1C`,"Issue 42 · Spring 2026")}
+ ${T(22,b?250:318,`width:256px;font:800 ${b?54:28}px/1.02 ${SA};color:#1C1C1C`,"The Future of Food","lk")}
+ ${T(22,366,`font:600 12px/1.3 ${SA};color:#1C1C1C`,"Plus: 12 kitchens that run on sunlight")}`}),
+ yes:"Reduced the cover line so it no longer competes with the masthead",
+ no:[["Enlarged the masthead","The masthead is the same size in both."],["Removed the cover line","The cover line is still there in B, just smaller."]],
+ diff:"Cover line 54 px → 28 px",
+ why:"Two elements of equal strength split attention. Choose one leader and let the other support it."},
+{c:"emphasis",piece:"Software sign-up page",title:"A button lost in a crowd",
+ html:b=>({w:380,h:300,bg:"#F5F7FB",body:`${T(28,30,`font:700 24px/1.15 ${SA};width:300px`,"Start designing with your team today")}
+ ${T(28,96,`font:400 14px/1.5 ${SA};color:#4a5568;width:300px`,"Free for 14 days. No credit card needed.")}
+ <div class="ab lk" style="left:28px;top:${b?150:170}px;background:#3b5bdb;color:#fff;border-radius:6px;padding:11px 18px;font:600 14px/1 ${SA}">Start free trial</div>
+ <div class="ab" style="left:${b?172:28}px;top:${b?161:252}px;display:flex;gap:${b?8:14}px;font:400 13px/1 ${SA};color:#4a5568"><span>Pricing</span><span>Docs</span><span>Compare</span></div>`}),
+ yes:"Isolated the main button with space around it",
+ no:[["Made the button bigger","The button is the same size in both."],["Changed the button color","The button is the same blue in both."]],
+ diff:"Links crowded beside the button → button alone, links set apart below",
+ why:"Isolation is a form of emphasis. An element surrounded by space stands out even without getting bigger."},
+
+/* ── HIERARCHY ── */
+{c:"hierarchy",piece:"Night market flyer",title:"Everything at one level",
+ html:b=>{const st=b?[`font:800 46px/.95 ${SA}`,`font:700 20px/1.2 ${SA}`,`font:400 15px/1.3 ${SA}`,`font:400 13px/1.5 ${SA}`,`font:400 11px/1.3 ${SA}`]:Array(5).fill(`font:400 17px/1.35 ${SA}`);
+ return{w:300,h:400,bg:"#FFF6E5",body:`<div class="ab lk" style="left:28px;right:28px;top:30px;display:grid;gap:${b?10:12}px;color:#2A211B">
+ <div style="${st[0]}">Night Market</div><div style="${st[1]}">Fridays · 6–10 PM</div><div style="${st[2]}">Pier 4, Harbor District</div>
+ <div style="${st[3]}">Street food from 30 vendors, live music, and a makers' row with local art and crafts. Free entry, all ages.</div>
+ <div style="${st[4]};color:#6b5d52">harbornightmarket.org</div></div>`}},
+ yes:"Created clear levels of size and weight for each kind of information",
+ no:[["Changed the typeface","The same typeface is used in both."],["Centered the text","Both versions are flush left."]],
+ diff:"All 17 px regular → 46 / 20 / 15 / 13 / 11 px levels",
+ why:"Hierarchy tells readers what to read first, second, and third. With one level, readers must read everything to find anything."},
+{c:"hierarchy",piece:"Recipe card",title:"The label outranks the title",
+ html:b=>({w:320,h:390,bg:"#FFFFFF",body:`${ph("left:0;top:0;width:320px;height:120px","#c9793b","#f2dcc0")}
+ ${T(24,138,b?`font:700 14px/1.2 ${SE}`:`font:700 28px/1.1 ${SE}`,"Lemon Herb Chicken","lk")}
+ ${T(24,b?164:180,b?`font:800 30px/1 ${SA};letter-spacing:.02em`:`font:700 11px/1 ${SA};letter-spacing:.16em;color:#9a5b2e`,"INGREDIENTS","lk")}
+ <div class="ab" style="left:24px;right:24px;top:${b?206:200}px;font:400 13.5px/1.7 ${SA};color:#333">4 chicken thighs<br>2 lemons, zested and juiced<br>3 cloves garlic<br>2 tbsp fresh thyme<br>Salt and pepper</div>`}),
+ yes:"Made the recipe title the largest element and the section label small",
+ no:[["Moved the title below the ingredients","The title is above the ingredients in both."],["Added a photo","Both cards have the same photo."]],
+ diff:"Title 14 px / label 30 px → title 28 px / label 11 px",
+ why:"Labels like “Ingredients” are signposts, not headlines. When a label outranks the title, readers don't know what they're looking at."},
+{c:"hierarchy",piece:"News website headlines",title:"Same size, no hierarchy",
+ html:b=>{const I=[["Council approves new bike lanes","Construction on Wayne Street starts in June and runs through fall.","City · 2 hours ago"],["Library turns 100 with free festival","Readings, a mural project, and the garden's opening weekend.","Culture · 5 hours ago"],["Riverside team wins state title","A last-second shot sealed the 58–56 win on Saturday.","Sports · Yesterday"]];
+ return{w:360,h:340,bg:"#FFFFFF",body:`${T(24,22,`font:700 12px/1 ${SA};letter-spacing:.16em;color:#B3261E`,"LATEST")}
+ ${I.map(([h,s,m],i)=>`<div class="ab lk" style="left:24px;right:24px;top:${50+i*94}px;padding-bottom:12px;border-bottom:1px solid #E5E5E5;font:14px/1.45 ${SA}"><div style="font-weight:${b?400:700};color:${b?"#555":"#111"}">${h}</div><div style="color:#555">${s}</div><div style="color:${b?"#555":"#9AA0A8"};margin-top:2px">${m}</div></div>`).join("")}`}},
+ yes:"Used weight and value, not size, to separate headline, summary, and details",
+ no:[["Made the headlines larger","All text is 14 px in both."],["Added dividers between stories","The dividers are in both versions."]],
+ diff:"All regular gray → bold dark headline · regular summary · light gray details",
+ why:"Hierarchy doesn't always need size. Weight (bold) and value (dark vs light) can create three clear levels at one size."},
+{c:"hierarchy",piece:"Building directory sign",title:"Floors you can't find",
+ html:b=>{const R=[["1","Admissions","101–118"],["1","Cafe","120"],["2","Library","201–240"],["2","Writing Center","245"],["3","Design Studios","301–330"],["3","Gallery","340"]];
+ return{w:340,h:380,bg:"#1F2A30",body:`${T(26,24,`font:700 13px/1 ${SA};letter-spacing:.2em;color:#9FB3BF`,"HARBOR HALL · DIRECTORY")}
+ ${[0,1,2].map(g=>`<div class="ab" style="left:26px;right:26px;top:${60+g*100}px;display:grid;grid-template-columns:${b?"26px":"64px"} 1fr auto;gap:4px 12px;align-items:start;color:#fff;border-top:1px solid #3A4A54;padding-top:10px">
+ <div class="lk" style="grid-row:span 2;font:${b?`400 15px/1.3 ${SA}`:`600 52px/.9 ${OS}`}">${R[g*2][0]}</div>
+ ${[R[g*2],R[g*2+1]].map(r=>`<div style="font:400 15px/1.3 ${SA}">${r[1]}</div><div style="font:400 14px/1.3 ${SA};color:#9FB3BF">${r[2]}</div>`).join("")}</div>`).join("")}`}},
+ yes:"Made the floor numbers the top level so people can scan by floor",
+ no:[["Changed the sign's colors","The sign uses the same colors in both."],["Alphabetized the departments","The departments are in the same order in both."]],
+ diff:"Floor numbers 15 px → 52 px condensed",
+ why:"Signs are scanned from a distance. The first level should answer the first question (which floor?), then the details."},
+
+/* ── SCALE ── */
+{c:"scale",piece:"Library anniversary poster",title:"A timid number",
+ html:b=>({w:300,h:400,bg:"#F2B84B",body:`
+ ${b?T(28,40,`font:600 64px/1 ${OS};color:#C0501F`,"50","lk"):T(-26,-70,`font:600 330px/1 ${OS};color:#E0782E;letter-spacing:-.02em`,"50","lk")}
+ ${T(28,b?120:240,`width:230px;font:800 28px/1.05 ${SA};color:#2A1A0C`,"Years of Riverside Library")}
+ ${T(28,b?200:330,`font:600 13px/1.4 ${SA};color:#2A1A0C`,"Birthday celebration<br>Saturday, May 2 · all day")}`}),
+ yes:"Scaled the number up dramatically so it becomes the image",
+ no:[["Added more shapes","Neither version has extra shapes."],["Changed the colors","The yellow and orange are the same in both."]],
+ diff:"“50” at 64 px → 330 px, cropped by the edge",
+ why:"Extreme scale turns type into image and gives a poster drama. Letting it bleed off the edge makes it feel even bigger."},
+{c:"scale",piece:"State park brochure cover",title:"A flat row of trees",
+ html:b=>{const tr=b?[[40,190,60],[110,190,60],[180,190,60],[250,190,60],[320,190,60]]:[[30,150,110],[140,176,72],[222,193,48],[285,203,34],[330,209,24]];
+ return{w:380,h:280,bg:"#DDEBF2",body:`<div class="ab" style="left:0;right:0;top:210px;bottom:0;background:#9CB77E"></div>
+ ${tr.map(([x,y,h])=>`<svg class="ab lk" style="left:${x}px;top:${y+(b?0:0)}px" width="${h*.7}" height="${h}" viewBox="0 0 70 100"><polygon points="35,0 70,85 0,85" fill="#2F5D3A"/><rect x="30" y="85" width="10" height="15" fill="#5A3E2B"/></svg>`).join("")}
+ ${T(24,24,`font:700 24px/1.1 ${SE};color:#1F3B2A`,"Pine Ridge State Park")}${T(24,56,`font:400 13px/1 ${SA};color:#2F4A3A`,"Trails · Camping · Lake")}`}},
+ yes:"Varied the size and height of the trees to create depth",
+ no:[["Added more trees","There are five trees in both."],["Changed the tree colors","The trees are the same greens in both."]],
+ diff:"5 trees at 60 px → 110, 72, 48, 34, 24 px, rising toward the horizon",
+ why:"Things far away look smaller and sit higher. Scale changes can turn a flat row into a scene with foreground and distance."},
+{c:"scale",piece:"Business card",title:"A logo that swallows the card",
+ html:b=>{const s=b?120:44;return{w:350,h:200,bg:"#FFFFFF",body:`<div class="ab lk" style="left:24px;top:24px;width:${s}px;height:${s}px;border-radius:${s*.22}px;background:#1F6F5C;color:#fff;font:700 ${s*.5}px/${s}px ${SE};text-align:center">G</div>
+ ${T(b?160:24,b?30:86,`font:700 19px/1.1 ${SE}`,"Maya Chen")}${T(b?160:24,b?56:112,`font:400 12px/1.3 ${SA};color:#666`,"Landscape Architect")}
+ ${T(b?160:24,b?140:148,`font:400 11.5px/1.5 ${SA};color:#333`,"260-555-0188 · maya@greenline.co")}`}},
+ yes:"Scaled the logo down to suit its supporting role",
+ no:[["Moved the logo to the other side","The logo is in the top-left corner in both."],["Changed the logo's shape","The logo is the same rounded square in both."]],
+ diff:"Logo 120 px → 44 px",
+ why:"Scale should match importance. On a business card the person and contact details matter most; the logo identifies, it doesn't dominate."},
+
+/* ── CONTRAST ── */
+{c:"contrast",piece:"Travel book cover",title:"Timid title, timid subtitle",
+ html:b=>({w:260,h:380,bg:"#2E4A3F",body:`
+ ${T(24,48,`width:212px;font:${b?600:800} ${b?26:56}px/${b?1.2:.95} ${SE};color:#F1E6CF`,"The Salt Road","lk")}
+ ${T(24,b?118:190,`width:212px;font:${b?500:400} ${b?20:14}px/1.3 ${SE};color:#F1E6CF`,"A Journey Across the Andes","lk")}
+ ${T(24,330,`font:600 11px/1 ${SA};letter-spacing:.2em;color:#C9B98F`,"ELENA MARQUEZ")}`}),
+ yes:"Made the size and weight difference decisive",
+ no:[["Changed the typeface","Both versions use the same serif."],["Changed the text color","The text is the same cream color in both."]],
+ diff:"Title 26 px / subtitle 20 px → title 56 px heavy / subtitle 14 px light",
+ why:"A small difference looks like a mistake; a big difference looks intentional. If two things are different, make them very different."},
+{c:"contrast",piece:"App feature highlights",title:"The new feature blends in",
+ html:b=>{const L=["Sync","Share","Export","Comments","Templates","AI layouts"];return{w:420,h:220,bg:"#FFFFFF",body:`${T(24,22,`font:700 18px/1 ${SA}`,"What's in version 5")}
+ ${L.map((l,i)=>`<div class="ab" style="left:${24+i*64}px;top:70px;width:56px;text-align:center"><svg class="${i===5?"lk":""}" width="48" height="48" viewBox="0 0 48 48">${i===5&&!b?star(24,24,23,"#3b5bdb"):`<circle cx="24" cy="24" r="20" fill="#3b5bdb"/>`}</svg><div style="font:600 11px/1.2 ${SA};margin-top:6px;color:#333">${l}</div></div>`).join("")}
+ ${T(24,160,`font:400 13px/1.45 ${SA};color:#555;width:370px`,"Version 5 adds AI layouts, which suggest a starting grid for any page size.")}`}},
+ yes:"Gave the new feature a contrasting shape",
+ no:[["Made the new icon bigger","All icons are 48 px in both."],["Changed the new icon's color","All icons are the same blue in both."]],
+ diff:"Six circles → five circles and one star",
+ why:"Contrast isn't only size or color. One different shape in a row of similar shapes becomes the focal point instantly."},
+{c:"contrast",piece:"Jazz festival poster",title:"Everything runs one way",
+ html:b=>({w:300,h:400,bg:"#1B2340",body:`
+ <div class="ab lk" style="left:${b?26:18}px;top:${b?30:382}px;${b?"width:250px;":"transform:rotate(-90deg);transform-origin:0 0;white-space:nowrap;"}font:600 64px/1 ${OS};color:#FF8514">JAZZ WEEKEND</div>
+ ${T(b?26:110,b?170:40,`width:${b?248:170}px;font:400 15px/1.45 ${SA};color:#F4F1EA`,"Three nights of jazz on the river. Food trucks, free admission, all ages.")}
+ ${T(b?26:110,320,`font:700 15px/1.35 ${SA};color:#F4F1EA`,"Aug 7–9<br>Harbor Stage")}`}),
+ yes:"Rotated the title to contrast in direction with the rest",
+ no:[["Enlarged the title","The title is 64 px in both."],["Changed the title's typeface","The title uses the same condensed face in both."]],
+ diff:"Title horizontal → vertical along the left edge",
+ why:"When everything runs the same direction, the page feels static. One element turned 90° creates tension and a strong focal point."},
+
+/* ── BALANCE ── */
+{c:"balance",piece:"Award certificate",title:"Formal piece, lopsided layout",
+ html:b=>{const a=b?"left:44px;text-align:left":"left:0;right:0;text-align:center";return{w:420,h:300,bg:"#FBF8F1",body:`<div class="ab" style="inset:14px;border:2px solid #B08D57"></div><div class="ab" style="inset:20px;border:1px solid #B08D57"></div>
+ <div class="ab lk" style="${a};top:44px;font:600 12px/1 ${SA};letter-spacing:.24em;color:#8A6D3B">CERTIFICATE OF ACHIEVEMENT</div>
+ <div class="ab lk" style="${a};top:76px;font:italic 400 14px/1 ${SE};color:#555">presented to</div>
+ <div class="ab lk" style="${a};top:100px;font:700 34px/1.1 ${SE};color:#2A211B">Jordan Reyes</div>
+ <div class="ab lk" style="${a};top:156px;font:400 13px/1.5 ${SE};color:#444">for outstanding work in Foundations of Design<br>Riverside College · May 2026</div>
+ <div class="ab lk" style="${b?"left:44px":"left:170px"};top:220px;width:80px;height:50px;border-top:1px solid #8A6D3B;font:400 10px/1.8 ${SA};color:#777;text-align:center">Dean</div>`}},
+ yes:"Centered the elements for formal symmetrical balance",
+ no:[["Added a decorative border","Both certificates have the same double border."],["Made the name larger","The name is 34 px in both."]],
+ diff:"Everything flush left → everything centered on one axis",
+ why:"Formal documents call for symmetry: calm, stable, and traditional. Flush-left text inside a centered frame leaves the right side empty and the piece tipping."},
+{c:"balance",piece:"Museum website hero",title:"All the weight on one side",
+ html:b=>({w:420,h:310,bg:"#FFFFFF",body:`${ph(`left:24px;top:${b?20:60}px;width:180px;height:140px`,"#8aa4c9","#e8d8b8")}
+ <div class="ab lk" style="left:${b?24:228}px;top:${b?172:72}px;width:170px"><div style="font:700 22px/1.1 ${SE}">The Textile Rooms</div><div style="font:400 13px/1.5 ${SA};color:#555;margin-top:6px">Four renovated galleries open this spring.</div><div style="display:inline-block;margin-top:10px;background:#1C1C1C;color:#fff;border-radius:6px;padding:8px 12px;font:600 12px/1 ${SA}">Plan a visit</div></div>`}),
+ yes:"Moved the text to the opposite side to counterbalance the photo",
+ no:[["Resized the photo","The photo is 180 × 140 px in both."],["Centered everything","Nothing is centered in B; the text sits to the right."]],
+ diff:"Text under the photo (right half empty) → text to the right of the photo",
+ why:"Asymmetrical balance works like a seesaw: a heavy photo on one side needs a counterweight on the other."},
+{c:"balance",piece:"Gallery exhibition poster",title:"A small weight in the wrong place",
+ html:b=>({w:300,h:400,bg:"#F4F1EA",body:`<div class="ab" style="left:0;top:0;width:180px;height:220px;background:#1C1C1C"></div>
+ <div class="ab lk" style="left:${b?196:228}px;top:${b?40:320}px;width:50px;height:50px;border-radius:50%;background:#E0262F"></div>
+ ${T(24,250,`font:800 30px/1 ${SA};color:#1C1C1C`,"MASS &amp;<br>SPACE")}${T(24,330,`font:400 12px/1.5 ${SA};color:#333`,"New sculpture · Oct 3 – Dec 20<br>North Gallery")}`}),
+ yes:"Moved the small, intense circle to the opposite corner as a counterweight",
+ no:[["Made the circle bigger","The circle is 50 px in both."],["Changed the black block","The black block is the same size and color in both."]],
+ diff:"Red circle beside the black block → red circle in the far corner",
+ why:"Visual weight isn't just size. A small, saturated element placed far from a large dark one can balance it, like a child sitting at the end of a seesaw."},
+{c:"balance",piece:"Fall festival badge",title:"Items scattered around the center",
+ html:b=>{const L=["Food","Music","Crafts","Rides","Pies","Hayride","Games","Farm"];const ang=b?[0,32,75,140,172,215,285,318]:L.map((_,i)=>i*45);
+ return{w:340,h:340,bg:"#FFF3E0",body:`<div class="ab" style="left:120px;top:120px;width:100px;height:100px;border-radius:50%;background:#C0501F;color:#fff;font:800 17px/1.05 ${SA};display:grid;place-items:center;text-align:center">FALL<br>FEST</div>
+ ${L.map((l,i)=>{const t=(ang[i]-90)*Math.PI/180,x=170+120*Math.cos(t),y=170+120*Math.sin(t);return `<div class="ab lk" style="left:${x-28}px;top:${y-28}px;width:56px;height:56px;border-radius:50%;background:#fff;border:2px solid #C0501F;font:600 11px/52px ${SA};text-align:center;color:#6B2A12">${l}</div>`}).join("")}`}},
+ yes:"Spaced the items at equal angles around the center",
+ no:[["Enlarged the center badge","The center circle is 100 px in both."],["Changed the item labels","The eight labels are the same in both."]],
+ diff:"8 items at uneven angles → every 45°",
+ why:"Radial balance radiates from a center point. It only feels stable when the items are evenly spaced around it."},
+
+/* ── REPETITION ── */
+{c:"repetition",piece:"Software feature cards",title:"Three icons, three styles",
+ html:b=>{const I=b?[`<circle cx="20" cy="20" r="16" fill="none" stroke="#3b5bdb" stroke-width="2.5"/>`,`<rect x="4" y="4" width="32" height="32" rx="6" fill="#3b5bdb"/>`,`<polygon points="20,3 37,35 3,35" fill="#FFB319" stroke="#1C1C1C" stroke-width="1" stroke-dasharray="3 2"/>`]:[`<circle cx="20" cy="20" r="16" fill="none" stroke="#3b5bdb" stroke-width="2.5"/>`,`<rect x="5" y="5" width="30" height="30" rx="6" fill="none" stroke="#3b5bdb" stroke-width="2.5"/>`,`<polygon points="20,5 35,34 5,34" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linejoin="round"/>`];const L=[["Fast","Pages load in under a second."],["Secure","Files are encrypted end to end."],["Shared","Invite your whole team."]];
+ return{w:420,h:220,bg:"#F5F7FB",body:`${L.map(([h,p],i)=>`<div class="ab" style="left:${20+i*132}px;top:30px;width:120px;height:160px;background:#fff;border-radius:10px;padding:16px 12px"><svg class="lk" width="40" height="40" viewBox="0 0 40 40">${I[i]}</svg><div style="font:700 15px/1.2 ${SA};margin-top:10px">${h}</div><div style="font:400 12px/1.4 ${SA};color:#555;margin-top:4px">${p}</div></div>`).join("")}`}},
+ yes:"Repeated one icon style (blue outline) across all three cards",
+ no:[["Changed the card layout","The cards are the same size and layout in both."],["Changed the feature names","The names and descriptions are the same in both."]],
+ diff:"Outline / solid / dashed yellow → outline, outline, outline",
+ why:"Repeating a style tells readers these items belong to one set. Mixed styles make each card look like it came from a different product."},
+{c:"repetition",piece:"Program brochure page",title:"Every heading styled differently",
+ html:b=>{const H=["Admissions","Tuition","Housing"],P="Details on deadlines, forms, and who to contact are on our website.";const st=b?[`border-bottom:2px solid #1C1C1C;padding-bottom:3px;display:inline-block`,`border:1.5px solid #1C1C1C;padding:3px 8px;display:inline-block`,`font-style:italic`]:Array(3).fill(`border-left:5px solid #1F6F5C;padding-left:10px`);
+ return{w:300,h:380,bg:"#FFFFFF",body:`<div class="ab" style="left:28px;right:28px;top:30px">${H.map((h,i)=>`<div style="margin-bottom:26px"><div class="lk" style="font:700 18px/1.2 ${SA};${st[i]}">${h}</div><p style="font:400 13.5px/1.5 ${SE};color:#444;margin-top:8px">${P}</p></div>`).join("")}</div>`}},
+ yes:"Repeated one heading treatment for all three sections",
+ no:[["Made the headings larger","The headings are 18 px in both."],["Changed the body text","The paragraphs are identical in both."]],
+ diff:"Underline / box / italic → the same green bar on every heading",
+ why:"Readers learn a pattern once and then rely on it. Repeating one treatment makes the page easier to scan and look designed."},
+{c:"repetition",piece:"Magazine page thumbnails",title:"The page number keeps moving",
+ html:b=>{const pos=b?[["left:0;right:0;bottom:10px;text-align:center"],["right:12px;top:10px"],["left:12px;bottom:10px"]]:[["right:12px;bottom:10px"],["right:12px;bottom:10px"],["right:12px;bottom:10px"]];
+ return{w:420,h:230,bg:"#E9ECF1",body:`${[0,1,2].map(i=>`<div class="ab" style="left:${20+i*134}px;top:22px;width:122px;height:186px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15)">
+ <div style="margin:14px 12px 0;height:10px;background:#1C1C1C;width:70%"></div>${[0,1,2,3,4,5,6].map(k=>`<div style="margin:6px 12px 0;height:5px;background:#C9CED6;width:${k%3===2?60:90}%"></div>`).join("")}
+ <div class="ab lk" style="${pos[i][0]};font:600 11px/1 ${SA};color:#1C1C1C">${24+i}</div></div>`).join("")}`}},
+ yes:"Kept the page number in the same position on every page",
+ no:[["Changed the page layouts","The text blocks are the same on every page in both."],["Renumbered the pages","The pages are numbered 24, 25, 26 in both."]],
+ diff:"Bottom center / top right / bottom left → bottom right on every page",
+ why:"Repeated elements like page numbers and headers should stay put. Consistency is what makes a multi-page piece feel like one publication."},
+
+/* ── RHYTHM ── */
+{c:"rhythm",piece:"Blog post feed",title:"Every row the same",
+ html:b=>{const P=[["Printing by hand","Five days at the letterpress studio."],["Color field notes","What we learned mixing inks."],["Grid basics","Why every page needs a structure."]],C=[["#7fa88f","#e8e2c8"],["#c9793b","#f2dcc0"],["#8aa4c9","#d7e4f0"]];
+ return{w:360,h:400,bg:"#FFFFFF",body:`${P.map(([h,p],i)=>{const flip=!b&&i===1;return ph(`left:${flip?196:24}px;top:${24+i*124}px;width:140px;height:108px`,C[i][0],C[i][1],"ab lk")+`<div class="ab" style="left:${flip?24:180}px;top:${46+i*124}px;width:156px"><div style="font:700 16px/1.2 ${SE}">${h}</div><div style="font:400 13px/1.45 ${SA};color:#555;margin-top:4px">${p}</div></div>`}).join("")}`}},
+ yes:"Alternated the image side to create a left-right rhythm",
+ no:[["Made the images larger","All images are 140 × 108 px in both."],["Added more posts","There are three posts in both."]],
+ diff:"Image left, left, left → left, right, left",
+ why:"Alternating rhythm keeps a long feed lively. The zigzag gives the eye a beat to follow instead of a flat stack."},
+{c:"rhythm",piece:"Savings campaign poster",title:"Sizes with no pattern",
+ html:b=>{const S=b?[40,70,30,90,50]:[30,45,60,75,90];let x=24;const G=10;return{w:380,h:260,bg:"#EEF6EE",body:`${T(24,24,`font:800 26px/1.05 ${SA};color:#1F5C35;width:320px`,"Small steps grow big savings")}
+ ${S.map(s=>{const el=`<div class="ab lk" style="left:${x}px;top:${220-s}px;width:${s}px;height:${s}px;border-radius:50%;background:#2E8B47"></div>`;x+=s+G;return el}).join("")}`}},
+ yes:"Arranged the circles in a growing sequence",
+ no:[["Added more circles","There are five circles in both."],["Changed the circles' color","All circles are the same green in both."]],
+ diff:"40, 70, 30, 90, 50 px → 30, 45, 60, 75, 90 px",
+ why:"Progressive rhythm changes step by step, so the eye moves in one direction, which is perfect for an idea about growth."},
+{c:"rhythm",piece:"Tea box packaging",title:"A pattern that stutters",
+ html:b=>{const W=b?[18,6,30,10,14,26,8,20,12,28,6,22,40,26,34]:Array(15).fill(20);const C=b?["#1F6F5C","#E7B75F","#1F6F5C","#1F6F5C","#E7B75F","#F4EDE1","#E7B75F","#1F6F5C","#F4EDE1","#E7B75F","#1F6F5C","#F4EDE1","#1F6F5C","#E7B75F","#1F6F5C"]:Array(15).fill(0).map((_,i)=>["#1F6F5C","#E7B75F","#F4EDE1"][i%3]);let x=0;
+ return{w:300,h:380,bg:"#F4EDE1",body:`<div class="ab lk" style="left:0;right:0;top:0;height:150px;overflow:hidden">${W.map((w,i)=>{const s=`<div class="ab" style="left:${x}px;top:0;width:${w}px;height:150px;background:${C[i]}"></div>`;x+=w;return s}).join("")}</div>
+ ${T(26,180,`font:700 30px/1.05 ${SE};color:#1F3B33`,"Garden<br>Mint Tea")}${T(26,272,`font:400 13px/1.5 ${SA};color:#3A4A48`,"Organic loose leaf · 20 servings")}`}},
+ yes:"Made the stripe pattern repeat regularly",
+ no:[["Changed the stripe colors","The same green, gold, and cream are used in both."],["Made the stripe band taller","The band is 150 px tall in both."]],
+ diff:"Random widths and order → equal widths in a green, gold, cream repeat",
+ why:"Regular rhythm is calm and predictable, which suits a soothing product. A stuttering pattern looks like a printing error."},
+
+/* ── WHITE SPACE ── */
+{c:"whitespace",piece:"Perfume magazine ad",title:"No room to breathe",
+ html:b=>{const bottle=`<div class="ab" style="left:118px;top:120px;width:64px;height:120px;background:linear-gradient(160deg,#E9D5B7,#B98E5A);border-radius:10px"></div><div class="ab" style="left:136px;top:96px;width:28px;height:26px;background:#2A211B;border-radius:3px"></div>`;
+ return{w:300,h:400,bg:"#F4EFE9",body:`${bottle}
+ ${T(0,270,`width:300px;text-align:center;font:400 30px/1 ${SE};letter-spacing:.14em;color:#141414`,"NOIR")}
+ ${T(0,312,`width:300px;text-align:center;font:400 11px/1 ${SA};letter-spacing:.24em;color:#555`,"EAU DE PARFUM")}
+ ${b?`<div class="ab lk" style="left:14px;top:18px;background:#E0262F;color:#fff;font:800 13px/1 ${SA};padding:8px 10px;transform:rotate(-8deg)">NEW!</div>
+ <div class="ab lk" style="right:14px;top:22px;border:2px solid #141414;border-radius:50%;width:70px;height:70px;font:800 13px/1.1 ${SA};display:grid;place-items:center;text-align:center">50%<br>OFF</div>
+ <div class="ab lk" style="left:16px;top:170px;width:88px;font:600 11px/1.35 ${SA}">Long-lasting! Notes of amber, vanilla, and cedar!</div>
+ <div class="ab lk" style="right:14px;top:150px;width:92px;font:600 11px/1.35 ${SA}">★★★★★ “My favorite scent”</div>
+ <div class="ab lk" style="left:0;right:0;bottom:14px;text-align:center;font:700 11px/1.3 ${SA}">Free shipping · Limited time · Order now at noir.co · Gift wrap available</div>`:""}`}},
+ yes:"Removed the clutter so white space frames the product",
+ no:[["Enlarged the bottle","The bottle is the same size in both."],["Changed the background color","The background is the same warm off-white in both."]],
+ diff:"Product + 5 badges and callouts → product, name, and one line",
+ why:"Luxury is signaled by space. Every extra badge competes with the product, and open space tells the viewer the product is worth looking at."},
+{c:"whitespace",piece:"Nonprofit landing page",title:"Sections jammed together",
+ html:b=>{const p=b?6:26,g=b?0:14;const S=[["Clean water for every school","We've installed filters in 120 schools across the county.","#E8F1F8"],["How it works","Schools apply, we install, and students test the water in class.","#FFFFFF"],["Get involved","Volunteer, donate, or host a fundraiser.","#F4F1EA"]];let y=0;
+ return{w:340,h:420,bg:"#FFFFFF",body:`<div class="ab lk" style="left:0;right:0;top:0;display:grid;gap:${g}px">${S.map(([h,t,c],i)=>`<div style="background:${c};padding:${p}px 20px"><div style="font:700 ${i?17:22}px/1.15 ${SA}">${h}</div><div style="font:400 13px/1.5 ${SA};color:#444;margin-top:${b?2:8}px">${t}</div>${i===0?`<div style="display:inline-block;margin-top:${b?4:14}px;background:#1F6FB5;color:#fff;border-radius:6px;padding:8px 12px;font:600 12px/1 ${SA}">Donate</div>`:""}</div>`).join("")}</div>`}},
+ yes:"Added generous space within and between the sections",
+ no:[["Removed a section","All three sections appear in both."],["Changed the section colors","Each section keeps its color in both."]],
+ diff:"6 px inner spacing, no gaps → 26 px inner spacing, 14 px gaps",
+ why:"Passive white space (the space around and between blocks) is what makes content readable and lets each section feel like its own idea."},
+{c:"whitespace",piece:"Business card",title:"Type filling every edge",
+ html:b=>{const s=b?[26,16,14]:[18,11.5,11];return{w:350,h:200,bg:"#1C2B3A",body:`<div class="ab lk" style="left:${b?12:28}px;top:${b?12:30}px;right:${b?12:28}px;color:#fff">
+ <div style="font:700 ${s[0]}px/1.1 ${SE}">Jordan Reyes</div><div style="font:400 ${s[1]}px/1.4 ${SA};color:#AFC2D3;margin-top:${b?2:6}px">Graphic Designer</div>
+ <div style="font:400 ${s[2]}px/1.5 ${SA};margin-top:${b?8:48}px">260-555-0142<br>jordan@reyesdesign.co · reyesdesign.co</div></div>`}},
+ yes:"Reduced the type size so the card has room to breathe",
+ no:[["Changed the card color","The card is the same navy in both."],["Removed the website","Both cards list the website."]],
+ diff:"Name 26 px, text filling the card → name 18 px, generous margins",
+ why:"Small formats feel cramped fast. Smaller type with open space reads as confident and professional; oversized type reads as shouting."},
+{c:"whitespace",piece:"Photography exhibit poster",title:"Space trapped in little gaps",
+ html:b=>{const E=b?[[24,24],[170,60],[40,170],[180,220],[30,320]]:[[24,24],[24,110],[24,196],[150,24],[150,110]];
+ return{w:300,h:400,bg:"#FFFFFF",body:`${ph(`left:${E[0][0]}px;top:${E[0][1]}px;width:${b?110:120}px;height:${b?110:76}px`,"#8aa4c9","#e8d8b8","ab lk")}
+ ${ph(`left:${E[1][0]}px;top:${E[1][1]}px;width:${b?100:120}px;height:${b?90:76}px`,"#c9a27e","#f1e3c6","ab lk")}
+ ${ph(`left:${E[3][0]}px;top:${E[3][1]}px;width:${b?90:120}px;height:${b?80:76}px`,"#7fa88f","#e8e2c8","ab lk")}
+ <div class="ab lk" style="left:${E[2][0]}px;top:${E[2][1]}px;font:800 26px/1 ${SA};width:${b?120:120}px">LIGHT<br>STUDIES</div>
+ <div class="ab lk" style="left:${E[4][0]}px;top:${E[4][1]}px;font:400 12px/1.5 ${SA};width:120px">Sept 12 – Oct 30<br>Harbor Gallery</div>`}},
+ yes:"Grouped the elements so the empty space collects into one open area",
+ no:[["Removed a photo","All three photos appear in both."],["Enlarged the title","The title is the same size in both."]],
+ diff:"Elements scattered across the page → grouped at the top left, open space bottom right",
+ why:"The same amount of empty space can feel trapped (small leftover gaps) or active (one generous open area). Grouping content frees the space to work."},
+
+/* ── DIRECTION ── */
+{c:"direction",piece:"Running club ad",title:"The figure looks away",
+ html:b=>({w:400,h:240,bg:"#FFF4E6",body:`<svg class="ab lk" style="left:26px;top:40px" width="120" height="170" viewBox="0 0 120 170"><g transform="${b?"translate(120 0) scale(-1 1)":""}"><circle cx="60" cy="50" r="38" fill="#2A211B"/><polygon points="96,46 112,60 96,64" fill="#2A211B"/><path d="M20 170 Q60 90 100 170Z" fill="#C0501F"/></g></svg>
+ ${T(190,60,`width:190px;font:800 26px/1.05 ${SA};color:#2A211B`,"Run the river trail with us")}${T(190,140,`width:180px;font:400 13px/1.5 ${SA};color:#555`,"Saturdays at 7 AM · all paces welcome")}`}),
+ yes:"Turned the figure to face the headline",
+ no:[["Moved the figure to the right side","The figure is on the left in both."],["Made the figure larger","The figure is the same size in both."]],
+ diff:"Profile facing out of the page → facing the headline",
+ why:"Viewers follow where people in an image are looking. A face turned away leads the eye off the page; a face turned inward leads it to your message."},
+{c:"direction",piece:"Onboarding steps graphic",title:"Arrows that disagree",
+ html:b=>{const arr=(x,rot)=>`<svg class="ab lk" style="left:${x}px;top:98px;transform:rotate(${rot}deg)" width="36" height="24" viewBox="0 0 36 24"><path d="M2 12H28M20 4l10 8-10 8" fill="none" stroke="#3b5bdb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;const S=["Sign up","Pick a template","Invite your team"];
+ return{w:420,h:220,bg:"#FFFFFF",body:`${S.map((s,i)=>`<div class="ab" style="left:${20+i*140}px;top:70px;width:100px;height:80px;border:2px solid #3b5bdb;border-radius:10px;display:grid;place-items:center;text-align:center;font:600 13px/1.25 ${SA};padding:6px"><span><b style="display:block;font:800 18px/1 ${SA};color:#3b5bdb">${i+1}</b>${s}</span></div>`).join("")}
+ ${arr(122,b?180:0)}${arr(262,b?-90:0)}${T(20,176,`font:400 12.5px/1.4 ${SA};color:#555`,"Most teams are set up in under five minutes.")}`}},
+ yes:"Pointed both arrows along the reading path, left to right",
+ no:[["Renumbered the steps","The steps are numbered 1, 2, 3 in both."],["Moved the step boxes","The boxes are in the same places in both."]],
+ diff:"Arrows ← and ↑ → both →",
+ why:"Arrows are the most literal direction cue. When they contradict the order, readers hesitate; when they agree, the process reads itself."},
+{c:"direction",piece:"Product landing page",title:"The button starts the Z",
+ html:b=>({w:420,h:260,bg:"#FFFFFF",body:`
+ <div class="ab lk" style="${b?"right:24px;bottom:28px":"left:24px;top:20px"};font:800 18px/1 ${SA};color:#1F6F5C">Sprout</div>
+ <div class="ab lk" style="${b?"left:24px;top:18px":"right:24px;bottom:24px"};background:#1F6F5C;color:#fff;border-radius:6px;padding:10px 16px;font:600 13px/1 ${SA}">Get the app</div>
+ <div class="ab" style="right:24px;top:24px;display:flex;gap:14px;font:400 12px/1 ${SA};color:#555"><span>Features</span><span>Pricing</span></div>
+ ${ph("left:230px;top:60px;width:166px;height:130px","#9ccb2b","#eaf5d2")}
+ ${T(24,78,`width:190px;font:800 26px/1.08 ${SA}`,"Grow herbs on any windowsill")}${T(24,160,`width:180px;font:400 13px/1.5 ${SA};color:#555`,"Watering reminders and light tips for 40 plants.")}`}),
+ yes:"Moved the button to the end of the Z-pattern",
+ no:[["Changed the button color","The button is the same green in both."],["Removed the navigation links","The links appear in both."]],
+ diff:"Button top left, logo bottom right → logo top left, button bottom right",
+ why:"Simple pages are often scanned in a Z: top left, across, diagonally down, then across the bottom. Put the identity at the start and the action at the end."},
+{c:"direction",piece:"Cycling race poster",title:"A diagonal pointing away",
+ html:b=>({w:300,h:400,bg:"#F4F1EA",body:`<div class="ab lk" style="left:-60px;top:190px;width:440px;height:44px;background:#E0262F;transform:rotate(${b?35:-35}deg);transform-origin:50% 50%"></div>
+ <svg class="ab" style="left:118px;top:178px;transform:rotate(${b?35:-35}deg)" width="64" height="64" viewBox="0 0 64 64"><path d="M4 32h48M40 18l14 14-14 14" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" transform="${b?"rotate(180 32 32)":""}"/></svg>
+ ${T(150,26,`width:130px;text-align:right;font:600 44px/.92 ${OS};color:#1C1C1C`,"HILL<br>CLIMB")}${T(24,350,`font:600 13px/1.4 ${SA}`,"Sunday, June 7 · 8 AM · Route 9")}`}),
+ yes:"Angled the diagonal so it leads up to the title",
+ no:[["Moved the title","The title is at the top right in both."],["Made the stripe thicker","The stripe is 44 px thick in both."]],
+ diff:"Stripe and arrow rising to the top left → rising to the title at top right",
+ why:"Diagonals are the strongest lines of movement in a composition. Aim them at what matters, or they'll carry the eye off the page."},
+
+/* ── PROXIMITY ── */
+{c:"proximity",piece:"Account settings form",title:"Labels floating between fields",
+ html:b=>{const F=[["Full name","Jordan Reyes"],["Email","jordan@reyesdesign.co"],["Phone","260-555-0142"]];return{w:320,h:320,bg:"#FFFFFF",body:`${T(28,24,`font:700 20px/1 ${SA}`,"Your details")}
+ ${F.map(([l,v],i)=>{const y=76+i*78;return `<div class="ab lk" style="left:28px;top:${b?y-26:y}px;font:600 12.5px/1 ${SA};color:#333">${l}</div><div class="ab" style="left:28px;right:28px;top:${y+18}px;height:36px;border:1.5px solid #CDD2DA;border-radius:6px;font:400 13px/33px ${SA};padding-left:10px;color:#333">${v}</div>`}).join("")}`}},
+ yes:"Moved each label close to the field it describes",
+ no:[["Made the labels bold","The labels are the same weight in both."],["Added space between the fields","The fields are in the same positions in both."]],
+ diff:"Labels halfway between fields → 6 px above their own field",
+ why:"When a label sits exactly between two fields, readers can't tell which one it belongs to. Proximity answers that without a single line."},
+{c:"proximity",piece:"App home screen",title:"Captions between rows",
+ html:b=>{const I=[["Photos","#E0262F"],["Notes","#FFB319"],["Music","#7B2D96"],["Maps","#2DA046"],["Mail","#2459B5"],["Clock","#1C1C1C"],["Books","#F2541B"],["Files","#129489"]];
+ return{w:320,h:300,bg:"#EAF0F7",body:`${I.map(([l,c],i)=>{const col=i%4,row=Math.floor(i/4),x=24+col*72,y=40+row*120;return `<div class="ab" style="left:${x}px;top:${y}px;width:56px;height:56px;border-radius:14px;background:${c}"></div><div class="ab lk" style="left:${x-8}px;top:${b?y+86:y+62}px;width:72px;text-align:center;font:500 12px/1 ${SA};color:#1C1C1C">${l}</div>`}).join("")}`}},
+ yes:"Moved each caption directly under its own icon",
+ no:[["Made the icons larger","The icons are 56 px in both."],["Renamed the apps","The captions are the same words in both."]],
+ diff:"Captions 30 px below icons (near the next row) → 6 px below",
+ why:"Captions that drift toward the next row look like they belong to it. Keep related items closer to each other than to anything else."},
+{c:"proximity",piece:"Laptop spec sheet",title:"Six features in one long list",
+ html:b=>{const L=["14-inch display","12-hour battery","1.2 kg","Auto-save","Cloud sync","Offline mode"];return{w:340,h:340,bg:"#FFFFFF",body:`${T(28,24,`font:700 20px/1 ${SA}`,"Aero 14")}${T(28,54,`font:400 13px/1 ${SA};color:#666`,"Built for designers on the move")}
+ ${L.map((l,i)=>{const y=b?96+i*36:96+i*30+(i>2?34:0);return `<div class="ab lk" style="left:28px;top:${y}px;display:flex;align-items:center;gap:10px;font:400 15px/1 ${SA}"><i style="width:8px;height:8px;border-radius:50%;background:#3b5bdb"></i>${l}</div>`}).join("")}`}},
+ yes:"Clustered the features into two groups using space alone",
+ no:[["Added headings to the groups","Neither version has group headings."],["Changed the bullet style","The bullets are the same blue dots in both."]],
+ diff:"6 items evenly spaced → hardware (3) · larger gap · software (3)",
+ why:"Space alone can create groups. Readers now see hardware and software features as two sets before reading a word."},
+
+/* ── SIMILARITY ── */
+{c:"similarity",piece:"City neighborhood map",title:"Every place looks the same",
+ html:b=>{const P=[[60,80,"p"],[200,60,"s"],[250,150,"l"],[90,190,"p"],[170,210,"s"],[260,240,"p"],[40,260,"l"],[140,120,"s"]];const mk=(x,y,t)=>b?`<circle cx="${x}" cy="${y}" r="9" fill="#3A3A3A"/>`:t==="p"?`<circle cx="${x}" cy="${y}" r="9" fill="#2DA046"/>`:t==="s"?`<rect x="${x-8}" y="${y-8}" width="16" height="16" fill="#2459B5"/>`:`<polygon points="${x},${y-10} ${x+10},${y+8} ${x-10},${y+8}" fill="#FF8514"/>`;
+ return{w:340,h:340,bg:"#F2EFE6",body:`<svg class="ab lk" style="left:0;top:0" width="340" height="300" viewBox="0 0 340 300"><path d="M0 110 C120 90 200 140 340 120" stroke="#fff" stroke-width="14" fill="none"/><path d="M120 0 C130 120 110 200 150 300" stroke="#fff" stroke-width="10" fill="none"/>${P.map(p=>mk(...p)).join("")}</svg>
+ <div class="ab" style="left:0;right:0;bottom:0;height:40px;background:#fff;display:flex;gap:16px;align-items:center;padding:0 16px;font:500 12px/1 ${SA}">${b?"<span>● Places of interest</span>":`<span style="color:#2DA046">● Parks</span><span style="color:#2459B5">■ Schools</span><span style="color:#FF8514">▲ Libraries</span>`}</div>`}},
+ yes:"Gave each category its own shape and color",
+ no:[["Added more places","There are eight markers in both."],["Moved the markers","Every marker is in the same position in both."]],
+ diff:"8 identical dots → green circles, blue squares, orange triangles",
+ why:"Things that look alike are read as one group. Giving each category its own look lets readers sort the map at a glance."},
+{c:"similarity",piece:"Online store product row",title:"Same action, three looks",
+ html:b=>{const P=[["Canvas tote","$28"],["Enamel pin","$9"],["Sketchbook","$16"]];const B=b?[`background:#1C1C1C;color:#fff;border-radius:999px`,`background:#fff;color:#2DA046;border:2px solid #2DA046;border-radius:0`,`background:none;color:#2459B5;text-decoration:underline;padding-left:0!important`]:Array(3).fill(`background:#1C1C1C;color:#fff;border-radius:6px`);
+ return{w:420,h:260,bg:"#FFFFFF",body:`${P.map(([n,p],i)=>`<div class="ab" style="left:${20+i*134}px;top:24px;width:122px">${ph("height:110px","#d9c7a3","#f4efe4","")}<div style="font:600 14px/1.2 ${SA};margin-top:10px">${n}</div><div style="font:400 13px/1.4 ${SA};color:#666">${p}</div><div class="lk" style="display:inline-block;margin-top:10px;padding:8px 12px;font:600 12px/1 ${SA};${B[i]}">Add to cart</div></div>`).join("")}`}},
+ yes:"Gave the three “Add to cart” buttons one matching style",
+ no:[["Changed the button text","All three buttons say “Add to cart” in both."],["Resized the product photos","The photos are the same size in both."]],
+ diff:"Black pill / green outline / text link → three matching black buttons",
+ why:"Similarity works both ways: things that do the same job should look the same, or users will wonder if they do different things."},
+{c:"similarity",piece:"Anniversary campaign poster",title:"A number hidden in the dots",
+ html:b=>{const M=["11111","10000","11110","00001","00001","10001","01110"];let s="";for(let r=0;r<7;r++)for(let c=0;c<5;c++){const on=M[r][c]==="1";s+=`<circle cx="${60+c*45}" cy="${60+r*38}" r="14" fill="${!b&&on?"#C0501F":"#D9D2C4"}"/>`}
+ return{w:300,h:400,bg:"#FBF7EF",body:`<svg class="ab lk" style="left:0;top:0" width="300" height="330" viewBox="0 0 300 330">${s}</svg>${T(24,340,`font:800 18px/1.1 ${SA};color:#2A211B`,"Five years of Riverside Makers")}${T(24,366,`font:400 12px/1.3 ${SA};color:#555`,"Anniversary open house · May 9")}`}},
+ yes:"Colored some dots alike so a number emerges from the grid",
+ no:[["Rearranged the dots","Every dot is in the same position in both."],["Made some dots bigger","All dots are the same size in both."]],
+ diff:"35 identical dots → 17 orange dots forming a 5",
+ why:"The brain groups similar items into shapes. Changing only the color of some dots turns a texture into a message."},
+
+/* ── CLOSURE ── */
+{c:"closure",piece:"Design studio logo",title:"Too broken to close",
+ html:b=>{const gap=b?40:12;const arc=(a0,a1)=>{const p=a=>{const t=(a-90)*Math.PI/180;return[(70+50*Math.cos(t)).toFixed(1),(70+50*Math.sin(t)).toFixed(1)]};const[x0,y0]=p(a0),[x1,y1]=p(a1);return `<path d="M${x0} ${y0}A50 50 0 0 1 ${x1} ${y1}" fill="none" stroke="#1C1C1C" stroke-width="14"/>`};
+ return{w:320,h:240,bg:"#FFFFFF",body:`<svg class="ab lk" style="left:40px;top:50px" width="140" height="140" viewBox="0 0 140 140">${[0,90,180,270].map(a=>arc(a+gap/2,a+90-gap/2)).join("")}</svg>
+ ${T(196,96,`font:800 22px/1.05 ${SA}`,"Loop<br>Studio")}`}},
+ yes:"Narrowed the gaps so the eye completes the circle",
+ no:[["Made the strokes thicker","The strokes are 14 px in both."],["Added a fifth segment","Both marks have four segments."]],
+ diff:"Gaps of 40° → 12°",
+ why:"Closure only works when enough of the shape remains. Too much missing, and the eye sees four separate curves instead of one circle."},
+{c:"closure",piece:"Grand opening poster",title:"Letters cropped past recognition",
+ html:b=>({w:300,h:400,bg:"#1F6F5C",body:`${T(22,26,`font:700 13px/1 ${SA};letter-spacing:.2em;color:#E7F3EE`,"CORNER BAKERY")}${T(22,52,`font:400 14px/1.4 ${SA};color:#E7F3EE;width:250px`,"Fresh bread from 6 AM<br>12 Maple Street")}
+ <div class="ab lk" style="left:16px;top:${b?368:300}px;font:600 150px/1 ${OS};color:#F4E9D8">OPEN</div>`}),
+ yes:"Cropped less of the word so the eye can complete the letters",
+ no:[["Made the letters larger","The letters are 150 px in both."],["Changed the typeface","Both use the same condensed face."]],
+ diff:"About 20% of the letter height visible → about two-thirds visible",
+ why:"A bold crop is striking, but only if the viewer can still close the shapes. Show enough of each letter for the brain to fill in the rest."},
+{c:"closure",piece:"App empty state",title:"A dotted icon that falls apart",
+ html:b=>({w:320,h:300,bg:"#FFFFFF",body:`<svg class="ab lk" style="left:110px;top:44px" width="100" height="100" viewBox="0 0 100 100"><path d="M15 50 L50 18 L85 50 V88 H15 Z" fill="none" stroke="#3b5bdb" stroke-width="4" stroke-linecap="round" stroke-dasharray="${b?"3 18":"12 6"}"/></svg>
+ ${T(0,166,`width:320px;text-align:center;font:700 18px/1.2 ${SA}`,"No saved homes yet")}${T(40,196,`width:240px;text-align:center;font:400 13px/1.5 ${SA};color:#555`,"Tap the heart on any listing to save it here.")}`}),
+ yes:"Tightened the dashes so the house outline reads as one shape",
+ no:[["Made the icon bigger","The icon is 100 px in both."],["Changed the icon's shape","It's the same house outline in both."]],
+ diff:"Dashes 3 px, gaps 18 px → dashes 12 px, gaps 6 px",
+ why:"Dotted and dashed outlines rely on closure. When the gaps are bigger than the marks, the shape disappears into scattered dots."},
+
+/* ── CONTINUATION ── */
+{c:"continuation",piece:"Company history timeline",title:"A broken path through time",
+ html:b=>{const Y=b?[80,130,70,150,95]:[110,110,110,110,110];const L=["1998","2004","2011","2017","2026"];const xs=[40,120,200,280,360];
+ return{w:400,h:220,bg:"#FFFFFF",body:`${T(24,20,`font:700 18px/1 ${SA}`,"Our story")}
+ <svg class="ab lk" style="left:0;top:0" width="400" height="220" viewBox="0 0 400 220">${b?xs.slice(0,-1).map((x,i)=>i%2?"":`<line x1="${x}" y1="${Y[i]}" x2="${xs[i+1]}" y2="${Y[i+1]}" stroke="#C9CED6" stroke-width="3"/>`).join(""):`<line x1="20" y1="110" x2="380" y2="110" stroke="#1F6F5C" stroke-width="3"/>`}${xs.map((x,i)=>`<circle cx="${x}" cy="${Y[i]}" r="9" fill="#1F6F5C"/><text x="${x}" y="${Y[i]+30}" text-anchor="middle" font-family="Source Sans 3,Arial" font-size="13" font-weight="700">${L[i]}</text>`).join("")}</svg>`}},
+ yes:"Aligned the events on one continuous line",
+ no:[["Added more events","There are five events in both."],["Changed the years","The years are the same in both."]],
+ diff:"Dots at 5 heights with broken links → one straight line through all five",
+ why:"The eye follows a continuous line and expects it to go on. One unbroken path makes a sequence read as a story."},
+{c:"continuation",piece:"Streaming app carousel",title:"A row that looks finished",
+ html:b=>{const w=b?92:84,C=[["#7B2D96","#E0267A"],["#2459B5","#129489"],["#C0501F","#FFB319"],["#1F6F5C","#9CCB2B"]];
+ return{w:340,h:260,bg:"#101624",body:`${T(20,22,`font:700 17px/1 ${SA};color:#fff`,"Continue watching")}
+ ${C.slice(0,b?3:4).map((c,i)=>ph(`left:${20+i*(w+12)}px;top:56px;width:${w}px;height:150px;border-radius:8px`,c[0],c[1],"ab lk")).join("")}
+ ${T(20,222,`font:400 12px/1 ${SA};color:#8A93A6`,"12 shows")}`}},
+ yes:"Let the next card peek past the edge to show the row continues",
+ no:[["Added a scroll arrow","Neither version has an arrow."],["Made the cards taller","The cards are 150 px tall in both."]],
+ diff:"3 cards ending neatly at the edge → slightly narrower cards, with a 4th cut off by the edge",
+ why:"A row that ends cleanly looks complete. A card cut off at the edge suggests the line continues, so people know to scroll."},
+{c:"continuation",piece:"Monthly sales chart",title:"Dots without a trend",
+ html:b=>{const v=[40,52,48,66,74,70,88],xs=v.map((_,i)=>40+i*48),ys=v.map(n=>200-n*1.7);
+ return{w:380,h:240,bg:"#FFFFFF",body:`${T(24,18,`font:700 16px/1 ${SA}`,"Online orders, January–July")}
+ <svg class="ab lk" style="left:0;top:0" width="380" height="240" viewBox="0 0 380 240">${[60,110,160].map(y=>`<line x1="30" x2="360" y1="${y}" y2="${y}" stroke="#EEE"/>`).join("")}${b?"":`<polyline points="${xs.map((x,i)=>x+","+ys[i]).join(" ")}" fill="none" stroke="#3b5bdb" stroke-width="3"/>`}${xs.map((x,i)=>`<circle cx="${x}" cy="${ys[i]}" r="5" fill="#3b5bdb"/><text x="${x}" y="222" text-anchor="middle" font-size="11" fill="#777" font-family="Source Sans 3,Arial">${"JFMAMJJ"[i]}</text>`).join("")}</svg>`}},
+ yes:"Connected the points so the eye follows the trend",
+ no:[["Changed the data","Each month has the same value in both."],["Added gridlines","The gridlines are in both."]],
+ diff:"7 separate dots → 7 dots joined by a line",
+ why:"A line turns separate values into one movement. Continuation makes the upward trend visible instead of leaving readers to connect the dots."},
+
+/* ── FIGURE–GROUND ── */
+{c:"figureground",piece:"Bird festival poster",title:"A figure that melts into the ground",
+ html:b=>({w:300,h:400,bg:"#CFE3E8",body:`<svg class="ab lk" style="left:40px;top:70px" width="220" height="170" viewBox="0 0 220 170"><path d="M10 90 Q60 20 110 70 Q150 10 210 30 Q160 60 140 100 Q120 150 60 140 Q30 130 10 90Z" fill="${b?"#BFD6DC":"#1F3B45"}"/><circle cx="170" cy="40" r="4" fill="${b?"#CFE3E8":"#CFE3E8"}"/></svg>
+ ${T(26,290,`font:800 28px/1.05 ${SA};color:#1F3B45`,"Spring Bird<br>Count")}${T(26,360,`font:400 12px/1.3 ${SA};color:#1F3B45`,"Lakeside Preserve · April 18")}`}),
+ yes:"Increased the value difference between the bird and the background",
+ no:[["Made the bird larger","The bird is the same size in both."],["Changed the background color","The background is the same pale blue in both."]],
+ diff:"Bird #BFD6DC on #CFE3E8 → #1F3B45 on #CFE3E8",
+ why:"Figure–ground depends on difference. When the figure and background are close in value, the eye can't decide what's in front."},
+{c:"figureground",piece:"News app card feed",title:"Cards dissolving into the page",
+ html:b=>{const C=[["Council approves new bike lanes","City"],["Library turns 100","Culture"],["Riverside wins state title","Sports"]];
+ return{w:360,h:340,bg:"#E6E9EE",body:`${C.map(([h,t],i)=>`<div class="ab lk" style="left:18px;right:18px;top:${20+i*104}px;height:90px;border-radius:10px;background:${b?"#E6E9EE":"#FFFFFF"};${b?"":"box-shadow:0 1px 3px rgba(0,0,0,.12)"};padding:14px;display:flex;gap:12px">${ph("width:62px;height:62px;border-radius:6px;flex:none","#8aa4c9","#e8d8b8","")}<div><div style="font:600 11px/1 ${SA};color:#3b5bdb;letter-spacing:.08em">${t.toUpperCase()}</div><div style="font:700 15px/1.25 ${SA};margin-top:6px">${h}</div></div></div>`).join("")}`}},
+ yes:"Set the cards on white with a soft shadow so they separate from the page",
+ no:[["Added more space between cards","The cards are in the same positions in both."],["Changed the card content","The headlines and images are the same in both."]],
+ diff:"Cards the same gray as the page → white cards with a soft shadow",
+ why:"Cards only work as objects when they stand apart from the background. Value and a hint of depth make each card a figure."},
+{c:"figureground",piece:"Web app dialog",title:"A dialog with no stage",
+ html:b=>({w:360,h:300,bg:"#FFFFFF",body:`${T(20,18,`font:700 16px/1 ${SA}`,"Projects")}${[0,1,2,3].map(i=>`<div class="ab" style="left:20px;right:20px;top:${48+i*58}px;height:46px;border:1px solid #E1E4EA;border-radius:8px;font:400 13px/44px ${SA};padding-left:12px;color:#333">Poster series ${i+1}</div>`).join("")}
+ ${b?"":`<div class="ab lk" style="inset:0;background:rgba(16,22,36,.55)"></div>`}
+ <div class="ab" style="left:50px;right:50px;top:80px;background:#fff;border-radius:12px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.2);border:1px solid #E1E4EA"><div style="font:700 16px/1.2 ${SA}">Delete “Poster series 2”?</div><div style="font:400 13px/1.45 ${SA};color:#555;margin-top:6px">This can't be undone.</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><span style="padding:8px 12px;border:1px solid #CDD2DA;border-radius:6px;font:600 12px/1 ${SA}">Cancel</span><span style="padding:8px 12px;background:#B3261E;color:#fff;border-radius:6px;font:600 12px/1 ${SA}">Delete</span></div></div>`}),
+ yes:"Dimmed the page behind the dialog",
+ no:[["Made the dialog larger","The dialog is the same size in both."],["Added a shadow to the dialog","The dialog has the same shadow in both."]],
+ diff:"No backdrop → 55% dark overlay behind the dialog",
+ why:"A dialog must be the clear figure. Dimming everything behind it pushes the page into the background and focuses attention."},
+
+/* ── COMMON REGION ── */
+{c:"region",piece:"Pricing page",title:"Plans that run together",
+ html:b=>{const P=[["Basic","$9","3 projects · 1 user · Email support"],["Studio","$29","Unlimited projects · 5 users · Priority support"],["Team","$59","Everything in Studio · 20 users · Admin tools"]];
+ return{w:420,h:260,bg:"#F5F7FB",body:`${T(0,22,`width:420px;text-align:center;font:700 20px/1 ${SA}`,"Choose a plan")}
+ ${P.map(([n,p,f],i)=>`<div class="ab lk" style="left:${20+i*130}px;top:60px;width:120px;height:176px;padding:14px 12px;border-radius:10px;${b?"":"background:#fff;border:1px solid #C9D1DD;box-shadow:0 2px 6px rgba(0,0,0,.08)"}"><div style="font:700 12px/1 ${SA};letter-spacing:.1em;color:#3b5bdb">${n.toUpperCase()}</div><div style="font:800 26px/1 ${SA};margin:10px 0 8px">${p}</div><div style="font:400 12px/1.5 ${SA};color:#444">${f.split(" · ").join("<br>")}</div></div>`).join("")}`}},
+ yes:"Enclosed each plan in its own card",
+ no:[["Added space between the plans","The plans sit in the same columns in both."],["Rewrote the plan features","The features are the same in both."]],
+ diff:"Floating text columns → each plan in a white card with a border",
+ why:"A shared background or border is one of the strongest grouping cues. Each card now reads as one complete offer."},
+{c:"region",piece:"News article page",title:"An ad disguised as the article",
+ html:b=>({w:320,h:400,bg:"#FFFFFF",body:`<div class="ab" style="left:24px;right:24px;top:24px;font:400 13.5px/1.55 ${SE};color:#2B2B2B">
+ <div style="font:700 20px/1.15 ${SE};margin-bottom:10px">Council Approves New Bike Lanes</div>
+ <p>Construction begins in June on protected lanes along Wayne Street, with work expected to finish in the fall.</p>
+ <div class="lk" style="margin:12px 0;${b?"":"background:#F4F1EA;border:1px solid #E2DACB;border-radius:8px;"}padding:${b?0:12}px"><div style="font:600 10px/1 ${SA};letter-spacing:.14em;color:#8A7B68;margin-bottom:6px">SPONSORED</div><div style="font:700 14px/1.3 ${SA}">Ride further with Volt e-bikes</div><div style="font:400 12.5px/1.45 ${SA};color:#555">Spring sale: 20% off every model this week.</div></div>
+ <p>Council members said the lanes will connect the downtown library with the riverfront trail.</p></div>`}),
+ yes:"Set the sponsored content in its own shaded box",
+ no:[["Added a “Sponsored” label","The label appears in both versions."],["Moved the ad lower in the article","The ad sits between the same paragraphs in both."]],
+ diff:"Ad set directly in the article column → ad inside a tinted, bordered panel",
+ why:"A shared region marks what belongs together, and a separate region marks what doesn't. Readers deserve to see where the article ends and the ad begins."},
+{c:"region",piece:"Checkout page",title:"Shipping and billing in one stream",
+ html:b=>{const f=(l,y)=>`<div class="ab" style="left:${b?28:40}px;top:${y}px;font:600 11.5px/1 ${SA};color:#333">${l}</div><div class="ab" style="left:${b?28:40}px;right:${b?28:40}px;top:${y+16}px;height:30px;border:1.5px solid #CDD2DA;border-radius:6px;background:#fff"></div>`;
+ return{w:340,h:400,bg:"#FFFFFF",body:`${b?"":`<div class="ab lk" style="left:24px;right:24px;top:20px;height:170px;background:#F3F5F8;border-radius:10px"></div><div class="ab lk" style="left:24px;right:24px;top:206px;height:170px;background:#F3F5F8;border-radius:10px"></div>`}
+ ${T(b?28:40,34,`font:700 13px/1 ${SA};letter-spacing:.08em`,"SHIPPING")}${f("Address",58)}${f("City",120)}
+ ${T(b?28:40,220,`font:700 13px/1 ${SA};letter-spacing:.08em`,"BILLING")}${f("Card number",244)}${f("Expiry",306)}`}},
+ yes:"Enclosed each group of fields in its own shaded panel",
+ no:[["Added group headings","“Shipping” and “Billing” appear in both."],["Changed the field order","The fields are in the same order in both."]],
+ diff:"One continuous stream of fields → two shaded panels",
+ why:"Headings alone are easy to miss. A common region shows at a glance that these fields are one task and those are another."}
+];
+D.forEach((c,i)=>{c.n=i+1;const s=D.filter(x=>x.c===c.c);c.id=c.c+"-"+(s.indexOf(c)+1)});
+
+/* ═════════ EYE PATH LAYOUTS ═════════ */
+const EYE=[
+ {piece:"Concert poster",w:300,h:400,bg:"#1E1B3A",els:[
+  ["band",26,40,`font:600 64px/.92 ${OS};color:#F3E9D2;text-transform:uppercase`,"Northern<br>Lights","Huge, heavy, and at the top left: the most visual weight on the page."],
+  ["date",26,210,`font:700 20px/1.3 ${SA};color:#E7B75F`,"Friday, Nov 14 · 8 PM","Second largest, and bright gold against navy."],
+  ["venue",26,250,`font:400 15px/1.3 ${SA};color:#F3E9D2`,"The Clyde Theatre","Smaller and quieter, directly below the date."],
+  ["tix",26,360,`font:400 11px/1.3 ${SA};color:#9A94BD`,"Tickets $20 · theclyde.com","Tiny, low contrast, and last: fine print."]]},
+ {piece:"Software landing page",w:420,h:260,bg:"#F5F7FB",els:[
+  ["head",24,54,`width:250px;font:800 30px/1.08 ${SA};color:#121826`,"Design tools for small teams","Largest and darkest element, in the top left where reading starts."],
+  ["sub",24,134,`width:240px;font:400 14px/1.5 ${SA};color:#4a5568`,"Plan, review, and ship brand work in one place.","Directly under the headline, smaller and lighter."],
+  ["btn",24,192,`background:#3b5bdb;color:#fff;border-radius:6px;padding:11px 16px;font:600 13px/1 ${SA}`,"Start free trial","A saturated block at the end of the text column."],
+  ["nav",300,20,`display:flex;gap:14px;font:400 12px/1 ${SA};color:#4a5568`,"<span>Pricing</span><span>Docs</span>","Small, gray utility links, read only when needed."]]},
+ {piece:"Summer sale email",w:320,h:400,bg:"#FFF3E0",els:[
+  ["off",0,40,`width:320px;text-align:center;white-space:nowrap;font:600 80px/1 ${OS};color:#E0262F`,"40% OFF","Enormous and red: impossible to miss."],
+  ["what",0,150,`width:320px;text-align:center;font:700 18px/1.2 ${SA};color:#2A211B`,"Everything in the studio shop","Explains the offer, directly under it."],
+  ["btn",105,210,`background:#2A211B;color:#fff;border-radius:6px;padding:12px 18px;font:700 13px/1 ${SA}`,"Shop the sale","A dark, solid shape centered in the path."],
+  ["foot",0,360,`width:320px;text-align:center;font:400 10px/1.3 ${SA};color:#8A7B68`,"Unsubscribe · View in browser","Tiny footer text, last by design."]]},
+ {piece:"Annual report page",w:360,h:340,bg:"#FFFFFF",els:[
+  ["stat",28,30,`font:700 88px/1 ${SE};color:#1F4E5F`,"86%","The largest element, set apart by space."],
+  ["lab",28,130,`width:260px;font:600 17px/1.3 ${SA};color:#1C1C1C`,"of graduates found design jobs within six months","Explains the number right below it."],
+  ["body",28,196,`width:300px;font:400 13px/1.55 ${SE};color:#444`,"Placement rose for the third year in a row, led by growth in packaging and web roles.","Paragraph text: read by those who want more."],
+  ["src",28,300,`font:400 10.5px/1.3 ${SA};color:#999`,"Source: Career Services survey, 2025","Tiny source line."]]},
+ {piece:"Cereal box front",w:300,h:380,bg:"#FFD23F",els:[
+  ["brand",0,24,`width:300px;text-align:center;font:600 58px/.95 ${OS};color:#B3261E`,"CRUNCH<br>RIDGE","Biggest, boldest element, centered at the top."],
+  ["flav",90,166,`width:120px;height:120px;border-radius:50%;background:#1F6F5C;color:#fff;display:grid;place-items:center;text-align:center;font:800 17px/1.1 ${SA}`,"Honey<br>Oat","A dark circle in the middle breaks the yellow field."],
+  ["claim",0,300,`width:300px;text-align:center;font:600 14px/1.3 ${SA};color:#2A211B`,"Whole grain · 12 g protein","Supporting claims under the flavor."],
+  ["wt",210,352,`font:400 10px/1 ${SA};color:#2A211B`,"NET WT 14 OZ","Small, required, and last."]]},
+ {piece:"Banking app screen",w:300,h:420,bg:"#FFFFFF",els:[
+  ["bal",24,70,`font:800 44px/1 ${SA};color:#121826`,"$2,418.50","The largest number on the screen."],
+  ["lbl",24,40,`font:500 12px/1 ${SA};color:#666;letter-spacing:.08em`,"CHECKING BALANCE","Small label above the number; read after it, to confirm what it is."],
+  ["btn",24,140,`background:#1F6F5C;color:#fff;border-radius:8px;padding:12px 18px;font:700 14px/1 ${SA}`,"Send money","The only saturated shape on the screen."],
+  ["list",24,210,`width:252px;font:400 13px/2 ${SA};color:#333;border-top:1px solid #EEE;padding-top:10px`,"Riverside Rentals −$950.00<br>Harbor Coffee −$4.75<br>Paycheck +$1,820.00","A dense list, scanned last and only as needed."]]}
+];
+
+/* ═════════ STATE ═════════ */
+const $=id=>document.getElementById(id);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const RANKS=[[0,"Doodler"],[100,"Layout Rookie"],[300,"Grid Scout"],[600,"Focal Finder"],[1000,"Composition Detective"],[1600,"Art Director"]];
+let P={xp:0,streak:0,best:0,det:{}};
+try{Object.assign(P,JSON.parse(localStorage.getItem("composition-detective")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("composition-detective",JSON.stringify(P))}catch(e){}};
+let tab="detective",R=null,scope="all",deck=[],pos=0,lvl=1,chall=null,eyeDeck=[],eyePos=0;
+
+function renderRank(){const cur=[...RANKS].reverse().find(r=>P.xp>=r[0]),i=RANKS.indexOf(cur),nx=RANKS[i+1];
+ $("rankName").textContent=cur[1];$("xpText").textContent=`${P.xp} XP`+(nx?` / ${nx[0]}`:"");
+ $("xpBar").style.width=(nx?Math.min(100,(P.xp-cur[0])/(nx[0]-cur[0])*100):100)+"%";
+ $("streakText").textContent=`Streak ${P.streak} · Best ${P.best}`+(P.streak>=3?" · streak bonus active":"")}
+function award(ok,base){if(!ok){P.streak=0;save();renderRank();return 0}P.streak++;P.best=Math.max(P.best,P.streak);const pts=base*(chall?2:1)+(P.streak>=3?3:0);P.xp+=pts;save();renderRank();return pts}
+
+function renderTerms(){$("terms").innerHTML=CONCEPTS.map(([g,l])=>`<p class="group">${g}</p><div class="terms">${l.map(([k,n,d])=>{const cs=D.filter(c=>c.c===k);if(!cs.length)return `<div class="term" data-key="${k}"><span class="tn"><span>${n}</span></span><span class="td">${d}</span></div>`;const got=cs.filter(c=>P.det[c.id]).length;
+ return `<button type="button" class="term${scope===k?" sel":""}" data-key="${k}"><span class="tn"><span>${n}</span><span class="tp${got===cs.length?" done":""}">${got}/${cs.length}</span></span><span class="td">${d}</span></button>`}).join("")}</div>`).join("");
+ $("terms").querySelectorAll("button.term").forEach(t=>t.onclick=()=>{scope=t.dataset.key;deck=[];pos=0;setTab("detective");$("play").scrollIntoView({block:"start",behavior:reduced?"auto":"smooth"})})}
+function highlight(keys){document.querySelectorAll(".term.on").forEach(t=>t.classList.remove("on"));let first=null;[].concat(keys).forEach(k=>{const c=document.querySelector(`.term[data-key="${k}"]`);if(c){c.classList.add("on");first=first||c}});if(first){const side=document.querySelector(".vocab");if(getComputedStyle(side).position==="sticky")side.scrollTop=first.offsetTop-side.offsetTop-60}}
+
+function frame(letter,label,cls,a){return `<figure class="frame ${cls}">${letter?`<figcaption><span class="tag">${letter}</span>${label}</figcaption>`:""}<div class="paste"><div class="fit" data-w="${a.w}" data-h="${a.h}"><div class="art" style="width:${a.w}px;height:${a.h}px;background:${a.bg}">${a.body}</div></div></div></figure>`}
+function fitAll(){document.querySelectorAll(".fit").forEach(f=>{const w=+f.dataset.w,h=+f.dataset.h,av=f.clientWidth;if(!av)return;const s=Math.min(1.3,av/w),art=f.firstElementChild;art.style.transform=`scale(${s})`;art.style.left=((av-w*s)/2)+"px";f.style.height=(h*s)+"px"})}
+new ResizeObserver(fitAll).observe($("stage"));
+function radioOpts(list,grid){$("fs").hidden=false;$("opts").className="opts"+(grid?" grid":"");$("opts").innerHTML=list.map((o,i)=>`<label class="opt" for="o${i}"><input type="radio" name="o" id="o${i}" value="${i}"><span>${esc(o.t)}</span><span class="why" hidden></span></label>`).join("");$("opts").querySelectorAll("input").forEach(r=>r.onchange=()=>$("checkBtn").disabled=false)}
+const selIdx=()=>{const r=document.querySelector('input[name="o"]:checked');return r?+r.value:-1};
+
+/* ═════════ ROUND: COMPOSITION CASE ═════════ */
+function caseRound(c,level){
+ level=level||lvl;const allC=CONCEPTS.slice(0,2).flatMap(g=>g[1]);
+ const opts=level===1?shuffle([{t:CN[c.c][1],ok:true},...shuffle(allC.filter(x=>x[0]!==c.c)).slice(0,3).map(x=>({t:x[1],ok:false,w:x[2]}))]):shuffle([{t:c.yes,ok:true},...c.no.map(([t,w])=>({t,ok:false,w}))]);
+ return{type:"case",c,label:chall?"Composition case":`Case ${String(c.n).padStart(2,"0")} of ${D.length}`,title:level===1?"Which principle does B fix?":"What changed between A and B?",piece:c.piece,
+  ctrl:()=>chall?"":`<span class="lbl">Level</span><span class="mini" role="group" aria-label="Level">${[[1,"1 · Name the principle"],[2,"2 · Name the fix"]].map(([n,l])=>`<button type="button" data-lv="${n}" aria-pressed="${lvl===n}">${l}</button>`).join("")}</span><span class="lbl">Cases</span><select id="scopeSel"><option value="all">All ${D.length} cases</option>${CONCEPTS.slice(0,2).map(([g,l])=>`<optgroup label="${g}">${l.map(([k,n])=>`<option value="${k}" ${scope===k?"selected":""}>${n} (${D.filter(x=>x.c===k).length})</option>`).join("")}</optgroup>`).join("")}</select>`,
+  bindCtrl(){$("ctrl").querySelectorAll("[data-lv]").forEach(b=>b.onclick=()=>{lvl=+b.dataset.lv;R=caseRound(c);R.answered=false;paint()});const s=$("scopeSel");if(s){s.value=scope;s.onchange=()=>{scope=s.value;deck=[];pos=0;newRound()}}},
+  draw(){$("stage").innerHTML=`<div class="compare" id="cmp">${frame("A","Problem","bad",c.html(true))}${frame("B","Corrected","good",c.html(false))}</div>`;fitAll();$("hintRow").hidden=!!chall;radioOpts(opts,level===1);$("legend").textContent=level===1?"Choose the principle":"Choose the fix"},
+  check(){const s=selIdx(),ok=opts[s].ok,p=award(ok,level===1?10:15);
+   $("opts").querySelectorAll(".opt").forEach((l,i)=>{const o=opts[i],w=l.querySelector(".why");l.classList.add("locked");l.querySelector("input").disabled=true;if(o.ok){l.classList.add("right");w.innerHTML=level===1?"<b>Principle</b>This is the principle B applies.":"<b>Applied</b>This is the fix that turns A into B."}else{if(i===s)l.classList.add("wrong");w.innerHTML=level===1?`<b class="no">Not this one</b>${esc(o.w)}`:`<b class="no">Not applied</b>${esc(o.w)}`}w.hidden=false});
+   if(!chall){$("cmp").classList.add("hinting");$("hintBtn").setAttribute("aria-pressed","true")}
+   if(ok&&!P.det[c.id]){P.det[c.id]=1;save()}
+   return{ok,pts:p,hl:c.c,title:c.title,html:`${level===1?`<p><b>The fix:</b> ${esc(c.yes)}</p>`:""}<div class="diff"><span>What changed</span>${esc(c.diff)}</div><p>${esc(c.why)}</p>`,miss:{t:c.piece,fix:`${CN[c.c][1]}: ${c.yes}`}}}}
+}
+function nextCase(){const pool=D.filter(c=>scope==="all"||c.c===scope);if(pos>=deck.length){deck=shuffle(pool);pos=0}return caseRound(deck[pos++])}
+
+/* ═════════ ROUND: EYE PATH ═════════ */
+function eyeRound(L){
+ L=L||(()=>{if(eyePos>=eyeDeck.length){eyeDeck=shuffle(EYE);eyePos=0}return eyeDeck[eyePos++]})();let order=[];const want=L.els.map(e=>e[0]);
+ const art={w:L.w,h:L.h,bg:L.bg,body:shuffle(L.els).map(([id,x,y,st,txt])=>`<div class="ab ep" data-e="${id}" style="left:${x}px;top:${y}px;${st}" tabindex="0" role="button" aria-label="Element">${txt}</div>`).join("")+`<div id="badges"></div>`};
+ const drawBadges=(showWant=false)=>{const art=$("stage").querySelector(".art");if(!art)return;const bx=art.querySelector("#badges");bx.innerHTML="";const place=(id,n,cls)=>{const el=art.querySelector(`[data-e="${id}"]`);const cx=el.offsetWidth>=art.offsetWidth-4?8:el.offsetLeft-30;bx.insertAdjacentHTML("beforeend",`<div class="badge ${cls}" style="left:${Math.max(2,cx)}px;top:${Math.max(2,el.offsetTop-4)}px">${n}</div>`)};
+  if(showWant)want.forEach((id,i)=>place(id,i+1,order[i]===id?"want":"miss"));else order.forEach((id,i)=>place(id,i+1,""));
+  $("status").textContent=showWant?"":`${order.length} of ${want.length} placed`;$("checkBtn").disabled=order.length!==want.length;$("undoBtn").hidden=showWant||!order.length};
+ return{type:"eye",label:"Eye Path",title:"Where does the eye go? Click the elements in order.",piece:`${L.piece}. Click what you'd notice first, second, third, and last. Try the squint test if you're unsure.`,
+  ctrl:()=>"",bindCtrl(){},
+  draw(){$("stage").innerHTML=`<div class="single">${frame("","","",art)}</div>`;fitAll();$("hintRow").hidden=!!chall;$("hintBtn").hidden=true;
+   $("stage").querySelectorAll(".ep").forEach(el=>{const act=()=>{if(R.answered)return;const id=el.dataset.e;if(order.includes(id))return;order.push(id);drawBadges()};el.onclick=act;el.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();act()}}});
+   $("undoBtn").onclick=()=>{order.pop();drawBadges()};drawBadges()},
+  check(){const first=order[0]===want[0],second=order[1]===want[1],all=order.every((id,i)=>id===want[i]);const ok=first&&second;const p=award(ok,(first?10:0)+(second?5:0)+(all?5:0));
+   drawBadges(true);$("undoBtn").hidden=true;
+   return{ok,pts:p,hl:["emphasis","hierarchy","weight"],title:all?"You read it exactly as designed":first?"You found the entry point":"The eye starts somewhere else",html:`<p>${first?"You found the entry point.":"The designed entry point was different."} Green badges show where you matched the intended order; red show where you differed.</p><ol>${want.map(id=>{const e=L.els.find(x=>x[0]===id);return `<li>${e[5]}</li>`}).join("")}</ol><p class="muted">Size, value contrast, saturation, isolation, and position (top left in left-to-right languages) all add visual weight.</p>`,miss:{t:`Eye Path: ${L.piece}`,fix:"Check the entry point and the second element"}}}}
+}
+
+/* ═════════ RUNNER ═════════ */
+function paint(){
+ $("caseLabel").textContent=chall?`Challenge · question ${chall.i+1} of ${chall.n}`:R.label;$("progress").textContent=chall?`Score ${chall.score}`:"";
+ $("caseTitle").textContent=R.title;$("piece").textContent=R.piece;$("termChip").hidden=true;
+ $("ctrl").innerHTML=R.ctrl();$("ctrl").hidden=!$("ctrl").innerHTML.trim();R.bindCtrl();
+ $("fs").hidden=true;$("opts").innerHTML="";$("feedback").innerHTML="";$("status").textContent="";$("undoBtn").hidden=true;
+ $("hintBtn").hidden=false;$("hintBtn").setAttribute("aria-pressed","false");$("squintBtn").setAttribute("aria-pressed","false");$("stage").classList.remove("squint");
+ $("checkBtn").hidden=false;$("checkBtn").disabled=true;$("nextBtn").hidden=true;
+ R.draw();document.querySelectorAll(".term.on").forEach(t=>t.classList.remove("on"))}
+function newRound(){const type=chall?chall.list[chall.i]:tab;R=type==="eye"?eyeRound():chall?caseRound(chall.cases.pop(),2):nextCase();R.answered=false;paint()}
+function check(){
+ if(!R||R.answered)return;const res=R.check();R.answered=true;
+ $("caseTitle").textContent=res.title;const t=CN[[].concat(res.hl)[0]];if(t){$("termChip").textContent=t[1];$("termChip").hidden=false}highlight(res.hl);
+ $("feedback").innerHTML=`<div class="verdict">${res.ok?'<span class="pill ok">Correct</span>':'<span class="pill no">Not quite</span>'}${res.pts?`<span class="pill xp">+${res.pts} XP</span>`:""}${P.streak>=3&&res.ok?`<span class="pill xp">Streak ${P.streak}</span>`:""}</div>${res.html}`;
+ if(chall){if(res.ok)chall.score++;else chall.missed.push(res.miss);$("progress").textContent=`Score ${chall.score}`}
+ renderTerms();highlight(res.hl);
+ $("checkBtn").hidden=true;$("nextBtn").hidden=false;$("nextBtn").textContent=chall&&chall.i+1>=chall.n?"See results":"Next";$("nextBtn").focus({preventScroll:true})}
+function next(){if(chall){if(chall.i+1>=chall.n)return results();chall.i++}newRound();const r=$("play").getBoundingClientRect();if(r.top<0)$("play").scrollIntoView({block:"start",behavior:reduced?"auto":"smooth"})}
+
+function renderSetup(){$("lengths").innerHTML=[[10,8,2],[20,16,4],[30,24,6]].map(([n,c,e])=>`<button type="button" data-n="${n}" data-c="${c}" data-e="${e}"><b>${n}</b><small>${c} cases + ${e} eye paths</small></button>`).join("");$("lengths").querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>startChallenge(+b.dataset.n,+b.dataset.c,+b.dataset.e))}
+function startChallenge(n,c,e){chall={n,i:0,score:0,missed:[],list:shuffle([...Array(c).fill("case"),...Array(e).fill("eye")]),cases:shuffle(D).slice(0,c)};$("setup").hidden=true;$("play").hidden=false;$("results").hidden=true;newRound()}
+function results(){const c=chall,pct=Math.round(c.score/c.n*100);chall=null;$("play").hidden=true;
+ $("results").innerHTML=`<p class="meta" style="margin:0">Challenge complete</p><div class="big">${c.score} / ${c.n}</div><p class="muted" style="margin:0">${pct}% correct · points were doubled</p>`+
+ (c.missed.length?`<h2 style="margin-top:20px;font-size:20px">Review these</h2><ul class="missed">${c.missed.map(m=>`<li><b>${esc(m.t)}</b><small>${esc(m.fix)}</small></li>`).join("")}</ul>`:`<p style="margin-top:14px">Every answer correct.</p>`)+
+ `<div class="actions"><button type="button" class="primary" id="againBtn">New challenge</button><button type="button" class="secondary" id="backBtn">Back to cases</button></div>`;
+ $("results").hidden=false;$("againBtn").onclick=()=>setTab("challenge");$("backBtn").onclick=()=>setTab("detective")}
+function setTab(t){tab=t;chall=null;document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tab===t));$("results").hidden=true;$("setup").hidden=t!=="challenge";$("play").hidden=t==="challenge";renderTerms();if(t==="challenge")renderSetup();else newRound()}
+
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+$("checkBtn").onclick=check;$("nextBtn").onclick=next;
+$("hintBtn").onclick=()=>{const c=$("cmp");if(!c)return;const on=c.classList.toggle("hinting");$("hintBtn").setAttribute("aria-pressed",on)};
+$("squintBtn").onclick=()=>{const on=$("stage").classList.toggle("squint");$("squintBtn").setAttribute("aria-pressed",on)};
+$("resetBtn").onclick=()=>{P={xp:0,streak:0,best:0,det:{}};save();renderRank();renderTerms()};
+renderRank();setTab("detective");
+</script>
+
+</body>
+</html>

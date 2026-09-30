@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Production Detective: preflight InDesign and Illustrator files, set up documents from job tickets, and prepare files for print and screen.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2317202b'/%3E%3Cpath d='M14 22h8M22 14v8M42 14v8M42 22h8M14 42h8M22 42v8M42 42v8M42 42h8' stroke='%23eef1f5' stroke-width='3'/%3E%3C/svg%3E">
+<style>html,body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Production Detective</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:wght@500;600&family=Oswald:wght@500;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Source+Serif+4:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: masthead + rank, activity tabs, then the case card (job ticket, mock app screen, two-step answers) beside a sticky glossary rail. The mock app UI is always dark, like real layout software. */
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --stage:#d9dee6; --ink:#17202b; --muted:#5a6574; --line:#d3d9e1;
+  --pencil:#2f62c9; --pencil-soft:#e2eafb; --good:#1e7547; --good-soft:#e3f3ea; --bad:#b3261e; --bad-soft:#fbe8e6; --warn:#8a5a00; --warn-soft:#fdf1dc;
+  --display:"Newsreader",Georgia,serif; --ui:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --app:#2b2b2b; --app2:#383838; --app3:#454545; --appline:#1e1e1e; --apptext:#d6d6d6; --appmuted:#9a9a9a; --paste:#5a5a5a;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11151b; --surface:#19202a; --stage:#0b0e12; --ink:#e6eaf0; --muted:#9aa5b3; --line:#2b3441;
+  --pencil:#86a8ff; --pencil-soft:#1e2a44; --good:#62c994; --good-soft:#15301f; --bad:#ff8d84; --bad-soft:#3a1d1b; --warn:#f2c46b; --warn-soft:#3a2d14; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11151b; --surface:#19202a; --stage:#0b0e12; --ink:#e6eaf0; --muted:#9aa5b3; --line:#2b3441;
+  --pencil:#86a8ff; --pencil-soft:#1e2a44; --good:#62c994; --good-soft:#15301f; --bad:#ff8d84; --bad-soft:#3a1d1b; --warn:#f2c46b; --warn-soft:#3a2d14; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--ui)}
+.wrap{max-width:1280px;margin:0 auto;padding-inline:clamp(16px,3vw,32px);padding-block:24px 48px}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--pencil);outline-offset:2px}
+.mast{display:flex;flex-wrap:wrap;gap:16px 32px;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:18px}
+.kicker{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--pencil);margin:0 0 10px}
+h1{font:600 clamp(32px,5vw,46px)/1.02 var(--display);letter-spacing:-.01em;margin:0 0 10px}
+.lede{margin:0;max-width:68ch;color:var(--muted)}
+.rank{min-width:240px;display:grid;gap:6px}
+.rank .rn{display:flex;justify-content:space-between;gap:10px;font-weight:600}
+.rank .rn span:last-child{font:500 12px/1.6 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{height:8px;background:var(--line);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ink);transition:width .4s}
+.rank small{color:var(--muted);font-size:12.5px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.tabs button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 16px;font-weight:600;color:var(--muted)}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
+main{min-width:0;display:grid;gap:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:clamp(16px,2.4vw,24px);min-width:0}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font:500 12px/1.2 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.titleRow{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;margin:8px 0 6px}
+h2{font:600 24px/1.2 var(--display);margin:0;text-wrap:balance}
+.piece{margin:0 0 12px;color:var(--muted);font-size:14.5px}
+.chip{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:999px;background:var(--pencil-soft);color:var(--pencil)}
+.ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 12px;font-size:13px;color:var(--muted)}
+.ctrl .lbl{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase}
+select{padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--surface);max-width:100%}
+
+/* job ticket */
+.ticket{border:1.5px dashed var(--line);border-radius:8px;padding:12px 14px;margin-bottom:12px;background:var(--surface)}
+.ticket b{font:600 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px}
+.ticket ul{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.ticket li{font:500 12.5px/1 var(--mono);background:var(--bg);border-radius:6px;padding:6px 8px}
+/* mock app */
+.stageWrap{container:stage/inline-size;background:var(--stage);padding:12px;border-radius:8px}
+.appwin{background:var(--app);border-radius:8px;overflow:hidden;color:var(--apptext);font:12px/1.4 var(--ui);box-shadow:0 4px 18px rgba(0,0,0,.25)}
+.apptop{display:flex;align-items:center;gap:10px;padding:7px 10px;background:#1f1f1f;border-bottom:1px solid var(--appline);font-size:11.5px}
+.apptop .dots{display:flex;gap:5px}.apptop .dots i{width:9px;height:9px;border-radius:50%;background:#555}
+.apptop .an{font-weight:600;color:#fff}.apptop .fn{color:var(--appmuted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.appbody{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:0;min-height:260px}
+.appbody.one{grid-template-columns:1fr}
+@container stage (max-width:620px){.appbody{grid-template-columns:1fr}}
+.canvas{background:var(--paste);display:grid;place-items:center;padding:14px;min-width:0;overflow:auto}
+.side{background:var(--app);border-left:1px solid var(--appline);display:flex;flex-direction:column;gap:8px;padding:8px;min-width:0}
+.pn{background:var(--app2);border-radius:4px;overflow:hidden}
+.pn>h4{margin:0;padding:6px 9px;background:var(--app3);font:600 11px/1.2 var(--ui);color:#eee;display:flex;justify-content:space-between;gap:8px}
+.pn>h4 span{color:var(--appmuted);font-weight:500}
+.row{display:flex;align-items:center;gap:7px;padding:5px 9px;border-top:1px solid #2f2f2f;font-size:11.5px;min-height:26px}
+.row .ic{width:14px;text-align:center;color:var(--appmuted);flex:none;font-size:11px}
+.row .sw{width:16px;height:16px;border-radius:2px;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.row .lc{width:4px;height:16px;flex:none}
+.row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .tg{font:500 10px/1 var(--mono);color:var(--appmuted);flex:none}
+.row.hot{background:rgba(255,196,0,.14);box-shadow:inset 3px 0 0 #f5b400}
+.row.err{background:rgba(255,80,80,.12)}
+.st-ok{color:#6bd48a}.st-bad{color:#ff6b6b}.st-warn{color:#f5b400}
+.dlg{background:var(--app2);border-radius:6px;overflow:hidden}
+.dlg table{width:100%;border-collapse:collapse;font-size:11.5px}
+.dlg td{padding:6px 10px;border-top:1px solid #2f2f2f;vertical-align:top}
+.dlg td:first-child{color:var(--appmuted);width:46%}
+.dlg tr.hot td{background:rgba(255,196,0,.14)}
+.dlg tr.hot td:first-child{box-shadow:inset 3px 0 0 #f5b400}
+.pf{display:flex;align-items:center;gap:6px;padding:6px 10px;background:#1f1f1f;border-top:1px solid var(--appline);font-size:11px;color:var(--appmuted)}
+.pf i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.page{position:relative;flex:none}
+.page .trim{position:absolute;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.page .bld{position:absolute;border:1px solid #ff3b30;pointer-events:none;z-index:6}
+.page .mrg{position:absolute;border:1px solid #d946ef;pointer-events:none;z-index:6;opacity:.85}
+.page .fold{position:absolute;border-left:1px dashed #22d3ee;pointer-events:none;z-index:6}
+.page .it{position:absolute;overflow:hidden}
+.page .clip{position:absolute;overflow:hidden}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font:500 10.5px/1 var(--mono);color:#bbb;margin-top:8px;justify-content:center}
+.legend span::before{content:"";display:inline-block;width:12px;height:0;border-top:2px solid var(--c);margin-right:5px;vertical-align:middle}
+.files{display:grid;gap:6px;padding:10px}
+.file{display:flex;align-items:center;gap:10px;background:var(--app2);border-radius:5px;padding:8px 10px;font-size:12px}
+.file .ext{font:600 10px/1 var(--mono);background:#555;border-radius:3px;padding:5px 5px;color:#fff;min-width:38px;text-align:center}
+.file .sz{margin-left:auto;color:var(--appmuted);font:500 11px/1 var(--mono)}
+.web{background:#fff;color:#1c1c1c;border-radius:4px;overflow:hidden;width:100%;max-width:360px}
+
+.hintRow{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+fieldset{border:0;padding:0;margin:18px 0 0;min-width:0}
+legend{font-weight:600;margin-bottom:10px;padding:0;display:flex;gap:8px;align-items:center}
+legend .stepn{font:600 11px/1 var(--mono);background:var(--ink);color:var(--bg);border-radius:999px;padding:5px 8px}
+.opts{display:grid;gap:8px}
+.opt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;align-items:start;padding:12px 14px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:pointer}
+.opt input{margin:3px 0 0;accent-color:var(--pencil);width:17px;height:17px}
+.opt:has(input:checked){border-color:var(--pencil);box-shadow:inset 0 0 0 1px var(--pencil)}
+.opt.right{border-color:var(--good);background:var(--good-soft);box-shadow:none}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);box-shadow:none}
+.opt.missed{border-color:var(--warn);background:var(--warn-soft);box-shadow:none}
+.opt.locked{cursor:default}
+.why{grid-column:2;font-size:13.5px;color:var(--muted)}
+.why b{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;margin-right:6px}
+.opt.right .why b{color:var(--good)} .opt .why b.no{color:var(--bad)}
+.path{font:500 12.5px/1.4 var(--mono);background:var(--bg);border-radius:5px;padding:2px 6px}
+#feedback:empty{display:none}
+#feedback{margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-radius:8px;display:grid;gap:8px}
+.verdict{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+.pill{font:600 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:999px}
+.pill.ok{background:var(--good-soft);color:var(--good)} .pill.no{background:var(--bad-soft);color:var(--bad)} .pill.xp{background:var(--pencil-soft);color:var(--pencil)}
+#feedback p{margin:0}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;align-items:center}
+.primary{background:var(--ink);color:var(--bg);border:0;border-radius:7px;padding:11px 20px;font-weight:600}
+.primary:disabled{opacity:.4;cursor:not-allowed}
+.secondary{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:10px 18px;font-weight:600}
+.status{font-size:13px;color:var(--muted)}
+.lengths{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.lengths button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:14px 22px;min-width:110px;text-align:left}
+.lengths b{display:block;font:600 26px/1 var(--display)}
+.lengths small{color:var(--muted)}
+.muted{color:var(--muted)}
+.big{font:600 64px/1 var(--display);margin:10px 0 4px;font-variant-numeric:tabular-nums}
+.missed{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:8px}
+.missed li{border:1px solid var(--line);border-radius:7px;padding:10px 12px}
+.missed small{display:block;color:var(--muted)}
+
+/* setup lab form */
+.nd{background:var(--app2);border-radius:8px;padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px 14px;color:var(--apptext)}
+.nd label{display:grid;gap:4px;font-size:11.5px;color:var(--appmuted)}
+.nd input,.nd select{background:#1f1f1f;border:1px solid #555;border-radius:4px;color:#fff;padding:6px 8px;font:500 13px/1.2 var(--mono);width:100%}
+.nd input[type=checkbox]{width:auto}
+.nd .cb{display:flex;align-items:center;gap:8px;color:var(--apptext);font-size:12.5px;padding-top:18px}
+.nd .ok input,.nd .ok select{border-color:#3fbf6a;box-shadow:0 0 0 1px #3fbf6a}
+.nd .no input,.nd .no select{border-color:#ff6b6b;box-shadow:0 0 0 1px #ff6b6b}
+.nd h5{grid-column:1/-1;margin:0;font:600 12px/1 var(--ui);color:#fff;border-bottom:1px solid #444;padding-bottom:8px}
+.res{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.res li{display:flex;gap:8px;font-size:14px}
+.res li b{flex:none;width:18px}
+
+.vocab{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.vocab h2{font-size:20px}
+.vocab>p{font-size:12.5px;color:var(--muted);margin:6px 0 10px}
+.group{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--pencil);margin:14px 0 6px}
+.terms{display:grid;gap:4px}
+.term{display:block;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:7px;padding:7px 9px;transition:background .2s}
+button.term:hover{background:var(--bg)}
+.term .tn{display:flex;justify-content:space-between;gap:8px;font-weight:600;font-size:13.5px}
+.term .tp{font:500 11px/1.6 var(--mono);color:var(--muted);white-space:nowrap}
+.term .tp.done{color:var(--good)}
+.term .td{display:block;margin-top:2px;font-size:12.5px;line-height:1.45;color:var(--muted)}
+.term.on{background:var(--pencil-soft);border-color:var(--pencil)}
+.term.sel{border-color:var(--line)}
+.reset{margin-top:12px;background:none;border:0;padding:0;font-size:12px;color:var(--muted);text-decoration:underline}
+.colophon{margin-top:28px;font-size:12px;color:var(--muted);max-width:92ch}
+@media (max-width:1000px){.layout{grid-template-columns:1fr}.vocab{position:static;max-height:none}.terms{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <a href="../" style="display:inline-block;margin:0 0 14px;font:500 13px/1 'IBM Plex Sans',system-ui,sans-serif;color:var(--pencil);text-decoration:none">← All Design Detective apps</a>
+<header class="mast">
+    <div>
+      <p class="kicker">Document setup · preflight · output</p>
+      <h1>Production Detective</h1>
+      <p class="lede">Think like a prepress technician. Inspect InDesign and Illustrator files the way a printer does, find what will stop production, and choose the fix. Then set up documents correctly from a job ticket and sweep whole files for problems.</p>
+    </div>
+    <div class="rank" aria-live="polite">
+      <div class="rn"><span id="rankName">Intern</span><span id="xpText">0 XP</span></div>
+      <div class="bar"><i id="xpBar"></i></div>
+      <small id="streakText">Streak 0 · Best 0</small>
+    </div>
+  </header>
+  <nav class="tabs" aria-label="Activities">
+    <button type="button" data-tab="cases" aria-pressed="true">Preflight Cases</button>
+    <button type="button" data-tab="setup" aria-pressed="false">Setup Lab</button>
+    <button type="button" data-tab="sweep" aria-pressed="false">Printer's Sweep</button>
+    <button type="button" data-tab="challenge" aria-pressed="false">Challenge</button>
+  </nav>
+  <div class="layout">
+    <main>
+      <section id="csetup" class="card" hidden>
+        <h2>Challenge mode</h2>
+        <p class="muted" style="margin:6px 0 0">A mixed test of preflight cases, document setups, and full-file sweeps. Double points.</p>
+        <div id="lengths" class="lengths"></div>
+      </section>
+      <section id="play" class="card">
+        <div class="meta"><span id="caseLabel"></span><span id="progress"></span></div>
+        <div class="titleRow"><h2 id="caseTitle"></h2><span id="termChip" class="chip" hidden></span></div>
+        <p id="piece" class="piece"></p>
+        <div id="ctrl" class="ctrl"></div>
+        <div id="ticketBox"></div>
+        <div class="stageWrap"><div id="stage"></div></div>
+        <fieldset id="fs" hidden><legend id="legend"></legend><div id="opts" class="opts"></div></fieldset>
+        <div id="feedback" aria-live="polite"></div>
+        <div class="actions">
+          <button id="checkBtn" type="button" class="primary" disabled>Check</button>
+          <button id="nextBtn" type="button" class="primary" hidden>Next</button>
+          <span id="status" class="status"></span>
+        </div>
+      </section>
+      <section id="results" class="card" hidden></section>
+    </main>
+    <aside class="vocab" aria-labelledby="vocabHead">
+      <h2 id="vocabHead">Production Glossary</h2>
+      <p>Select a category to practice its cases. The count shows how many you've fully solved on this device.</p>
+      <div id="terms"></div>
+      <button id="resetBtn" type="button" class="reset">Reset my points and progress</button>
+    </aside>
+  </div>
+  <p class="colophon">Screens are simplified mock-ups of InDesign and Illustrator panels for teaching, not screenshots. Menu names follow recent Creative Cloud versions (InDesign calls master pages “parent pages” since 2021). Always follow your printer's own specifications when they differ from the common standards used here.</p>
+</div>
+
+<script>
+/* ═════════ GLOSSARY & CATEGORIES ═════════ */
+const CATS=[
+ ["setup","Document Setup","Page size, color mode, facing pages, and raster settings chosen when the file is created."],
+ ["bleed","Bleed & Trim","Bleed is artwork that extends past the trim line (usually 0.125 in / 3 mm) so no white edge shows after cutting."],
+ ["margins","Margins & Safe Zone","The live area inside the trim where important text must stay. Folds and bindings need extra room."],
+ ["layers","Layers","Named layers separate text, images, background, and dielines so printers can check and edit safely."],
+ ["color","Color & Swatches","Print jobs use CMYK process swatches unless spot inks are specified. Every extra ink is an extra plate."],
+ ["overprint","Overprint & Ink","Overprint prints one ink on top of another; knockout removes the ink underneath. Total ink must stay within limits."],
+ ["images","Images & Links","Placed images must be linked, up to date, CMYK or color managed, and about 300 ppi effective at final size."],
+ ["type","Type & Fonts","Fonts must be available, text must fit its frames, and fine strokes and small type must survive printing."],
+ ["styles","Styles & Consistency","Paragraph, character, and object styles, parent pages, and global swatches keep files consistent and editable."],
+ ["export","Export & Handoff","The PDF preset, marks, bleed, page format, and packaged files the printer asked for."],
+ ["digital","Digital Output","Screens use RGB (sRGB), pixel dimensions, and the right file format for the job."]
+];
+const TERMS=[
+ ["Trim & bleed","Trim is the final cut size. Bleed is extra artwork past the trim, commonly 0.125 in (3 mm)."],
+ ["Safe zone (live area)","The area inside the trim where text and key art are safe from trimming variation, usually 0.125–0.25 in in."],
+ ["Slug","An area outside the bleed for job notes. It's trimmed away."],
+ ["Crop marks","Short lines outside the bleed that show where to cut. Offset them at least as far as the bleed."],
+ ["Actual vs effective ppi","Actual ppi is the image's native resolution. Effective ppi is the resolution after scaling in the layout. Print needs about 300 effective."],
+ ["Process (CMYK)","Printing with cyan, magenta, yellow, and black inks that mix to make colors."],
+ ["Spot color","A premixed ink (such as a Pantone color) printed on its own plate."],
+ ["Rich black","Black built with added CMY (for example 60/40/40/100) for deep large areas. Use 100% K only for small text."],
+ ["Registration","A color that prints on every plate at 100% (400% ink). Only for crop and registration marks."],
+ ["Total area coverage (TAC)","The sum of all ink percentages. Printers set a limit, often 280–320% for coated paper."],
+ ["Overprint & knockout","Overprint prints on top of inks below; knockout clears them. White must never overprint."],
+ ["Separations","The individual ink plates a file produces. Check them in Separations Preview."],
+ ["Preflight","A check for problems before output: missing links and fonts, overset text, low resolution, wrong color."],
+ ["Package","Collects the layout file, linked images, and fonts into one folder for the printer."],
+ ["PDF/X-1a and PDF/X-4","Print-standard PDF presets. X-1a flattens transparency and converts to CMYK; X-4 keeps live transparency and color management."],
+ ["Parent pages","Templates (formerly master pages) that hold repeating items like page numbers, running heads, and margins."],
+ ["Local override","Formatting applied on top of a style. Shown as a + next to the style name."],
+ ["Global swatch","An Illustrator swatch that updates every object using it when you edit it."],
+ ["Dieline","The cut or fold shape for packaging and die-cut pieces, kept on its own layer as a named spot color."],
+ ["Creep","In saddle-stitched booklets, inner pages push outward; content near the edge needs extra margin."],
+ ["sRGB","The standard color space for web and screens."],
+ ["@2x export","An image exported at twice its display size so it stays sharp on high-density screens."]
+];
+
+/* ═════════ MOCK UI BUILDERS ═════════ */
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+function win(app,file,canvas,side,one){return `<div class="appwin"><div class="apptop"><span class="dots"><i></i><i></i><i></i></span><span class="an">${app}</span><span class="fn">${esc(file)}</span></div><div class="appbody${one?" one":""}">${canvas!=null?`<div class="canvas">${canvas}</div>`:""}${side?`<div class="side">${side}</div>`:""}</div></div>`}
+function page(o){const P=.3,W=o.w*(o.spread?2:1),s=o.scale||Math.min(300/(W+2*P),330/(o.h+2*P)),px=v=>(v*s).toFixed(1);
+ const X=v=>px(P+v),bl=o.bleed||0,m=o.margin;
+ let h=`<div class="page" style="width:${px(W+2*P)}px;height:${px(o.h+2*P)}px"><div class="trim" style="left:${X(0)}px;top:${X(0)}px;width:${px(W)}px;height:${px(o.h)}px"></div>`;
+ h+=`<div class="clip" style="left:${X(-bl)}px;top:${X(-bl)}px;width:${px(W+2*bl)}px;height:${px(o.h+2*bl)}px">`;
+ (o.items||[]).forEach(([x,y,w,hh,st,inner])=>{h+=`<div class="it" style="left:${px(x+bl)}px;top:${px(y+bl)}px;width:${px(w)}px;height:${px(hh)}px;${st||""}">${inner||""}</div>`});
+ h+=`</div>`;
+ if(bl)h+=`<div class="bld" style="left:${X(-bl)}px;top:${X(-bl)}px;width:${px(W+2*bl)}px;height:${px(o.h+2*bl)}px"></div>`;
+ if(m!=null){const mm=typeof m==="number"?{t:m,b:m,l:m,r:m}:m;if(o.spread){h+=`<div class="mrg" style="left:${X(mm.o)}px;top:${X(mm.t)}px;width:${px(o.w-mm.o-mm.i)}px;height:${px(o.h-mm.t-mm.b)}px"></div><div class="mrg" style="left:${X(o.w+mm.i)}px;top:${X(mm.t)}px;width:${px(o.w-mm.o-mm.i)}px;height:${px(o.h-mm.t-mm.b)}px"></div>`}
+  else h+=`<div class="mrg" style="left:${X(mm.l)}px;top:${X(mm.t)}px;width:${px(o.w-mm.l-mm.r)}px;height:${px(o.h-mm.t-mm.b)}px"></div>`}
+ (o.folds||[]).forEach(f=>{h+=`<div class="fold" style="left:${X(f)}px;top:${X(0)}px;height:${px(o.h)}px"></div>`});
+ if(o.spread)h+=`<div class="fold" style="left:${X(o.w)}px;top:${X(0)}px;height:${px(o.h)}px;border-left-style:solid;border-color:#999"></div>`;
+ h+=`</div><div class="legend">${bl?`<span style="--c:#ff3b30">bleed ${bl} in</span>`:`<span style="--c:#777">no bleed set</span>`}${m!=null?`<span style="--c:#d946ef">margins</span>`:""}${o.folds?`<span style="--c:#22d3ee">folds</span>`:""}</div>`;return h}
+const pn=(title,rows,extra="")=>`<div class="pn"><h4>${title}${extra?`<span>${extra}</span>`:""}</h4>${rows}</div>`;
+const layers=rows=>pn("Layers",rows.map(r=>`<div class="row ${r.hot?"hot":""}"><span class="ic">${r.vis===false?"○":"◉"}</span><span class="ic">${r.lock?"🔒︎":""}</span><span class="lc" style="background:${r.c||"#4a90e2"}"></span><span class="nm"${r.np?' style="font-style:italic"':""}>${esc(r.n)}</span><span class="tg">${r.t||""}</span></div>`).join(""));
+const swatches=rows=>pn("Swatches",rows.map(r=>`<div class="row ${r.hot?"hot":""}"><span class="sw" style="background:${r.c}"></span><span class="nm">${esc(r.n)}</span><span class="tg">${r.t||""}</span></div>`).join(""));
+const links=rows=>pn("Links",rows.map(r=>`<div class="row ${r.hot?"hot":""}"><span class="ic ${r.s==="missing"?"st-bad":r.s==="modified"?"st-warn":"st-ok"}">${r.s==="missing"?"⊘":r.s==="modified"?"⚠":"✓"}</span><span class="nm">${esc(r.n)}</span><span class="tg">${r.t||""}</span></div>`).join(""));
+const preflight=(rows,ok)=>pn("Preflight",rows.map(r=>`<div class="row ${r.hot?"hot":""} ${r.e?"err":""}"><span class="ic ${r.e?"st-bad":"st-ok"}">${r.e?"●":"✓"}</span><span class="nm">${esc(r.n)}</span><span class="tg">${r.t||""}</span></div>`).join(""),ok?"No errors":`${rows.filter(r=>r.e).length} errors`);
+const dlg=(title,rows)=>`<div class="dlg"><h4 style="margin:0;padding:8px 10px;background:var(--app3);font:600 11.5px/1.2 var(--ui);color:#fff">${title}</h4><table>${rows.map(r=>`<tr class="${r[2]?"hot":""}"><td>${esc(r[0])}</td><td>${r[1]}</td></tr>`).join("")}</table></div>`;
+const seps=rows=>pn("Separations Preview",rows.map(r=>`<div class="row ${r.hot?"hot":""}"><span class="ic">◉</span><span class="sw" style="background:${r.c}"></span><span class="nm">${esc(r.n)}</span><span class="tg">${r.t||""}</span></div>`).join(""));
+const pfBar=(n)=>`<div class="pf"><i style="background:${n?"#ff5a5a":"#3fbf6a"}"></i>${n?`${n} error${n>1?"s":""}`:"No errors"}</div>`;
+const files=rows=>`<div class="files">${rows.map(r=>`<div class="file" ${r.hot?'style="box-shadow:inset 3px 0 0 #f5b400;background:#3d3a2c"':""}><span class="ext">${r.e}</span><span>${esc(r.n)}</span><span class="sz">${r.s}</span></div>`).join("")}</div>`;
+const T=(t,st="")=>`<div style="font:700 10px/1.1 'Source Sans 3',Arial,sans-serif;color:#1c1c1c;${st}">${t}</div>`;
+const lorem=(n,st="")=>`<div style="display:grid;gap:3px;padding:2px;${st}">${Array.from({length:n},(_,i)=>`<i style="display:block;height:3px;background:#9aa3ad;width:${i%4===3?60:95}%"></i>`).join("")}</div>`;
+const photo=(a="#8aa4c9",b="#e8d8b8")=>`<div style="width:100%;height:100%;background:linear-gradient(165deg,${a},${b})"></div>`;
+const pix=`<div style="width:100%;height:100%;background:conic-gradient(from 90deg,#8aa4c9 0 25%,#b7c7da 0 50%,#9fb3cc 0 75%,#c9d6e4 0) 0 0/14px 14px"></div>`;
+
+/* ═════════ CASES ═════════ */
+const C=[
+/* ── DOCUMENT SETUP ── */
+{cat:"setup",app:"InDesign",title:"The wrong page size",ticket:["Half-letter flyer","5.5 × 8.5 in","CMYK","0.125 in bleed"],
+ view:()=>win("InDesign","farmers-market-flyer.indd",page({w:8.5,h:11,bleed:.125,margin:.5,items:[[-.125,-.125,8.75,3.4,"",photo("#9ccb2b","#eaf5d2")],[.5,3.6,7,.8,"",T("SATURDAY FARMERS MARKET","font-size:15px")],[.5,4.6,7,3,"",lorem(12)]]}),dlg("Document Setup",[["Intent","Print"],["Number of pages","1"],["Page size","Letter",1],["Width × Height","8.5 in × 11 in",1],["Bleed","0.125 in all sides"]])),
+ problem:"The document is letter size (8.5 × 11 in), not the 5.5 × 8.5 in the job requires",
+ pno:[["The bleed is set incorrectly","Bleed is 0.125 in, which matches the ticket."],["The file is in RGB","The intent is Print (CMYK), matching the ticket."],["The margins are too small","0.5 in margins are generous. The page size is the problem."]],
+ fix:"Change the page size in <span class=path>File › Document Setup</span> to 5.5 × 8.5 in, then refit the layout",
+ fno:[["Export the PDF at 65% scale","Scaling a PDF changes type sizes and bleed, and the printer won't accept a resized file."],["Tell the printer to trim it down to half letter","Trimming would cut off most of the design; the file must be built at final size."]],
+ why:"Every file must be built at the final trim size. Printers impose pages at 100%; a wrong-size file can't simply be scaled without shrinking type, strokes, and bleed. Turning on Adjust Layout in Document Setup can help reposition content."},
+{cat:"setup",app:"Illustrator",title:"A print file built in RGB",ticket:["Event poster","18 × 24 in","4-color process (CMYK)"],
+ view:()=>win("Illustrator","gala-poster.ai @ 25% (RGB/Preview)",page({w:18,h:24,bleed:.125,items:[[-.125,-.125,18.25,24.25,"background:#00d26a",""],[2,2,14,4,"",T("SPRING GALA","font-size:26px;color:#fff")],[2,15,10,7,"background:#ff2dd4",""]]}),dlg("File › Document Color Mode",[["CMYK Color","○"],["RGB Color","● selected",1]])+swatches([{n:"Neon green",c:"#00d26a",t:"RGB"},{n:"Hot pink",c:"#ff2dd4",t:"RGB"}])),
+ problem:"The document color mode is RGB, so the bright colors can't be reproduced in CMYK",
+ pno:[["The poster is missing crop marks","Crop marks are added at PDF export, not in the artboard."],["The artboard is the wrong size","The artboard is 18 × 24 in, matching the ticket."],["The bleed is missing","A 0.125 in bleed is shown around the artboard."]],
+ fix:"Switch <span class=path>File › Document Color Mode › CMYK Color</span>, then check and adjust any colors that shifted",
+ fno:[["Leave it; the printer will convert it","Automatic conversion will dull the neon green and pink without warning. Convert and check it yourself."],["Increase the saturation so it survives conversion","CMYK can't print colors outside its gamut, no matter how saturated the RGB value."]],
+ why:"Illustrator sets color mode per document. Screen RGB includes colors (bright greens, neons, electric blues) that CMYK ink can't print. Build print files in CMYK from the start so you design with colors that will actually print."},
+{cat:"setup",app:"Illustrator",title:"A drop shadow that pixelates",ticket:["Product label","4 × 3 in","CMYK","300 ppi minimum"],
+ view:()=>win("Illustrator","honey-label.ai @ 400%",`<div style="background:#fff;width:280px;height:200px;display:grid;place-items:center;position:relative"><div style="font:800 46px/1 'Source Sans 3';color:#C9793B;text-shadow:3px 3px 0 rgba(0,0,0,.25),4px 4px 0 rgba(0,0,0,.18);filter:url(#none);letter-spacing:.02em">HONEY</div><div style="position:absolute;inset:0;background:repeating-conic-gradient(rgba(0,0,0,.05) 0 25%,transparent 0 50%) 0 0/8px 8px;mix-blend-mode:multiply;pointer-events:none"></div><span style="position:absolute;bottom:8px;right:10px;font:500 10px/1 var(--mono);color:#888">zoomed 400%</span></div>`,dlg("Effect › Document Raster Effects Settings",[["Color Model","CMYK"],["Resolution","Screen (72 ppi)",1],["Background","Transparent"]])),
+ problem:"Raster effects (the drop shadow) are set to 72 ppi, so they'll print blocky",
+ pno:[["The label text should be outlined","Outlining type doesn't change the resolution of effects."],["The document is in RGB","The color model is CMYK."],["The drop shadow is the wrong color","The color is fine; its resolution is too low."]],
+ fix:"Set <span class=path>Effect › Document Raster Effects Settings</span> to High (300 ppi)",
+ fno:[["Expand the drop shadow","Expanding at 72 ppi bakes in the low resolution."],["Rasterize the whole label at 72 ppi","That makes everything low resolution, including the type."]],
+ why:"Illustrator renders effects like drop shadows, blurs, and glows as pixels at the Document Raster Effects resolution. Web and some mobile presets default to 72 ppi, which prints visibly jagged. Print documents should use 300 ppi."},
+{cat:"setup",app:"InDesign",title:"A booklet built as single pages",ticket:["Saddle-stitched booklet","5.5 × 8.5 in","16 pages","Inside margin 0.625 in"],
+ view:()=>win("InDesign","program-booklet.indd",page({w:5.5,h:8.5,bleed:.125,margin:.5,items:[[.5,.5,4.5,.5,"",T("WELCOME","font-size:16px")],[.5,1.2,4.5,6.5,"",lorem(20)]]}),dlg("Document Setup",[["Number of pages","16"],["Facing Pages","☐ off",1],["Margins","Top, Bottom, Left, Right: 0.5 in",1],["Bleed","0.125 in"]])+`<div class="pn"><h4>Pages</h4><div class="row"><span class="nm">1 · 2 · 3 · 4 · … 16 (single pages in a column)</span></div></div>`),
+ problem:"Facing Pages is off, so the booklet has left/right margins instead of inside/outside margins",
+ pno:[["16 pages is the wrong count for a booklet","16 is a multiple of 4, which is correct for saddle stitching."],["The bleed is too small","0.125 in bleed is standard."],["The page size is wrong","5.5 × 8.5 in matches the ticket."]],
+ fix:"Turn on Facing Pages in <span class=path>File › Document Setup</span>, then set Inside to 0.625 in and Outside to 0.5 in",
+ fno:[["Make every margin 0.625 in","That wastes space on the outside edges and still ignores which side is the spine."],["Leave it; the printer imposes the pages","Imposition doesn't create inside margins; the design must allow for the binding."]],
+ why:"With Facing Pages on, InDesign shows spreads and swaps Left/Right margins for Inside/Outside, so the extra space always sits at the spine on both left and right pages."},
+
+/* ── BLEED ── */
+{cat:"bleed",app:"InDesign",title:"Color that stops at the edge",ticket:["Postcard","6 × 4 in","CMYK","0.125 in bleed"],
+ view:()=>win("InDesign","open-studio-postcard.indd",page({w:6,h:4,bleed:0,margin:.25,items:[[0,0,6,4,"background:#1F6F5C",""],[.4,.4,5,1,"",T("OPEN STUDIO","font-size:24px;color:#fff")],[.4,1.4,3.2,1.2,"",lorem(5)]]}),dlg("Document Setup",[["Page size","6 in × 4 in"],["Bleed","Top 0 · Bottom 0 · Inside 0 · Outside 0",1],["Slug","0 in"]])),
+ problem:"No bleed is set, so the green background ends exactly at the trim",
+ pno:[["The text is outside the safe zone","The text sits inside the magenta margins."],["The page is the wrong size","6 × 4 in matches the ticket."],["The green is an RGB color","Color mode isn't the issue here."]],
+ fix:"Set a 0.125 in bleed in <span class=path>File › Document Setup › Bleed and Slug</span> and extend the background to the red bleed guide",
+ fno:[["Add a white border so the edge doesn't matter","That changes the design; the job calls for full-bleed color."],["Scale the whole design up 3%","Scaling distorts the layout and moves text toward the trim."]],
+ why:"Paper shifts slightly during cutting. Without bleed, any shift leaves a thin white sliver along the edge. Any color or image that touches the trim must extend 0.125 in (3 mm) past it."},
+{cat:"bleed",app:"Illustrator",title:"Bleed set, art doesn't reach it",ticket:["Business card","3.5 × 2 in","CMYK","0.125 in bleed"],
+ view:()=>win("Illustrator","reyes-card.ai @ 200%",page({w:3.5,h:2,bleed:.125,margin:.125,items:[[.125,.125,3.5,.55,"background:#D9572B",""],[.4,.9,2.6,.3,"",T("Jordan Reyes","font-size:14px")],[.4,1.25,2.6,.5,"",lorem(3)]]}),dlg("Document Setup",[["Bleed","0.125 in all sides"],["Top band artwork","ends at the trim line",1]])),
+ problem:"The orange band touches the trim but doesn't extend into the bleed",
+ pno:[["The document has no bleed","A 0.125 in bleed is set (the red line)."],["The name is too close to the trim","The name sits inside the safe zone."],["The card is the wrong size","3.5 × 2 in matches the ticket."]],
+ fix:"Extend the orange band past the top and side trims to the red bleed guide",
+ fno:[["Move the band down 0.125 in","That leaves a white strip above it."],["Increase the bleed to 0.25 in","A bigger bleed setting doesn't move the artwork."]],
+ why:"Setting bleed in the document only creates the guide. The artwork itself has to be stretched out to it. Check every edge where color touches the trim."},
+{cat:"bleed",app:"InDesign",title:"Bleed smaller than the printer asked for",ticket:["Magazine ad","8.375 × 10.875 in","3 mm (0.125 in) bleed"],
+ view:()=>win("InDesign","coffee-ad-full-page.indd",page({w:8.375,h:10.875,bleed:.0625,margin:.5,items:[[-.0625,-.0625,8.5,10.99,"",photo("#6B2A12","#E7B75F")],[.6,.6,6,1.2,"",T("Roasted in small batches","font-size:15px;color:#fff")]]}),dlg("Document Setup",[["Page size","8.375 in × 10.875 in"],["Bleed","0.0625 in all sides",1]])),
+ problem:"The bleed is 0.0625 in (1/16 in), half of what the printer requires",
+ pno:[["The photo doesn't reach the bleed","The photo reaches the red bleed line; the line itself is too close."],["The page size is wrong","8.375 × 10.875 in matches the ticket."],["The headline is outside the margins","The headline sits inside the margins."]],
+ fix:"Change the bleed to 0.125 in in <span class=path>File › Document Setup</span> and stretch the photo to the new guide",
+ fno:[["Keep 1/16 in; it's close enough","Printers reject files that don't meet their bleed spec, or the trim may show white edges."],["Add crop marks","Crop marks don't add bleed."]],
+ why:"Bleed requirements come from the printer: 0.125 in (3 mm) is common; some large-format printers ask for more. Always match the job ticket."},
+{cat:"bleed",app:"InDesign",title:"A PDF exported without its bleed",ticket:["Postcard","6 × 4 in","0.125 in bleed","PDF/X-1a with crop marks"],
+ view:()=>win("InDesign","Export Adobe PDF",null,dlg("Export Adobe PDF › Marks and Bleeds",[["Crop Marks","☑"],["Offset","0.125 in"],["Use Document Bleed Settings","☐",1],["Bleed","Top 0 · Bottom 0 · Inside 0 · Outside 0",1]])+preflight([{n:"Document bleed: 0.125 in (set correctly)"},{n:"Artwork extends to bleed"}],true),true),
+ problem:"The export will drop the bleed because Use Document Bleed Settings is off and bleed is 0",
+ pno:[["The crop mark offset is wrong","A 0.125 in offset keeps marks outside the bleed."],["The document itself has no bleed","Preflight confirms the document bleed is set and the art extends to it."],["The PDF preset is wrong","Nothing here shows the preset is wrong."]],
+ fix:"In <span class=path>Export › Marks and Bleeds</span>, turn on Use Document Bleed Settings (0.125 in)",
+ fno:[["Re-export at 103% scale","Scaling doesn't create bleed and makes the piece the wrong size."],["Turn off crop marks","Marks aren't the problem; the missing bleed is."]],
+ why:"A correctly built file can still lose its bleed at export. Always check Marks and Bleeds, then open the PDF and confirm the bleed is there."},
+
+/* ── MARGINS ── */
+{cat:"margins",app:"InDesign",title:"Text hugging the trim",ticket:["Flyer","8.5 × 11 in","0.125 in bleed","Keep text 0.25 in inside trim"],
+ view:()=>win("InDesign","yoga-flyer.indd",page({w:8.5,h:11,bleed:.125,margin:.5,items:[[-.125,-.125,8.75,11.25,"background:#F4EDE1",""],[.08,.08,6,1.2,"",T("FIND YOUR PACE","font-size:18px")],[.5,1.6,7.5,4,"",lorem(14)],[.05,10.6,8,.35,"",T("harboryoga.com · 260-555-0114","font-size:10px")]]}),preflight([{n:"Text within 0.25 in of trim (2 items)",e:1,hot:1,t:"p.1"}])),
+ problem:"The headline and footer sit almost on the trim line, outside the safe zone",
+ pno:[["The background doesn't reach the bleed","The cream background extends to the bleed line."],["The body text is too small","Nothing here indicates a type size problem."],["The margins are set too wide","The margins are fine; the text ignores them."]],
+ fix:"Move the headline and footer inside the margin guides, at least 0.25 in from the trim",
+ fno:[["Increase the bleed so the text is safe","Bleed is trimmed away; more bleed doesn't protect text."],["Shrink the text slightly","Smaller text still sits on the trim; it needs to move inward."]],
+ why:"Cutting can vary by about 1/16 in. Anything important within 0.125–0.25 in of the trim risks being cut or looking crowded. Margin guides mark the safe zone; keep live content inside them."},
+{cat:"margins",app:"Illustrator",title:"A border that will trim unevenly",ticket:["Business card","3.5 × 2 in","Trim tolerance ±1/16 in"],
+ view:()=>win("Illustrator","maya-card.ai",page({w:3.5,h:2,bleed:.125,margin:.125,items:[[.12,.12,3.26,1.76,"border:2px solid #1F6F5C",""],[.4,.5,2.6,.3,"",T("Maya Chen","font-size:14px")],[.4,.9,2.6,.6,"",lorem(3)]]}),dlg("Border (rectangle)",[["Distance from trim","0.125 in on all sides",1],["Stroke","1 pt"]])),
+ problem:"A thin border only 0.125 in from the trim will look visibly uneven after cutting",
+ pno:[["The card has no bleed","A 0.125 in bleed is set."],["The border stroke is too thin to print","1 pt prints fine; its position is the problem."],["The name is too large","The type size isn't the issue."]],
+ fix:"Remove the border, or move it at least 0.25 in inside the trim (or extend it into the bleed as a thick frame)",
+ fno:[["Make the border thinner","A thinner line still shows uneven trimming."],["Ask the printer to trim more carefully","Every cutter has tolerance; design around it."]],
+ why:"A 1/16 in trim shift turns an even 1/8 in border into 1/16 on one side and 3/16 on the other, which the eye notices immediately. Keep borders well inside or run them off the edge."},
+{cat:"margins",app:"InDesign",title:"Text lost in the binding",ticket:["Perfect-bound catalog","8.5 × 11 in","Inside margin 0.75 in"],
+ view:()=>win("InDesign","fall-catalog.indd (spread 6–7)",page({w:4.25,h:5.5,spread:1,bleed:.0625,margin:{t:.4,b:.4,o:.4,i:.15},items:[[.4,.4,3.7,.4,"",T("New arrivals","font-size:13px")],[.4,.9,3.7,4.1,"",lorem(16)],[4.4,.4,3.7,4.6,"",lorem(18)]],scale:36}),dlg("Layout › Margins and Columns (parent page)",[["Top / Bottom","0.5 in"],["Inside","0.25 in",1],["Outside","0.5 in"]])),
+ problem:"The inside margin is only 0.25 in, so text runs into the spine where it will be hard to read",
+ pno:[["Facing pages are off","The document shows a spread, so facing pages are on."],["The page size is wrong","Nothing indicates a size error."],["The bleed is too large","The bleed isn't the issue."]],
+ fix:"On the parent pages, set the inside margin to 0.75 in in <span class=path>Layout › Margins and Columns</span> and reflow the text",
+ fno:[["Increase the outside margin","The binding is on the inside edge."],["Reduce the type size","Smaller type still disappears into the gutter."]],
+ why:"Perfect binding glues pages at the spine, and the page curves into it. Inside margins need extra room (the printer will specify how much). Set margins on the parent pages so every spread updates."},
+{cat:"margins",app:"InDesign",title:"Tri-fold panels all the same width",ticket:["Letter tri-fold brochure","11 × 8.5 in flat","Roll fold"],
+ view:()=>win("InDesign","clinic-trifold-inside.indd",page({w:11,h:8.5,bleed:.125,margin:.25,folds:[3.667,7.333],items:[[.3,.5,3.1,.6,"",T("Our Services","font-size:14px")],[.3,1.3,3.1,6,"",lorem(18)],[3.95,.5,3.1,6.8,"",lorem(20)],[7.6,.5,3.1,6.8,"",lorem(20)]]}),dlg("Panel widths (guides)",[["Panel 1","3.667 in",1],["Panel 2","3.667 in",1],["Panel 3 (folds in)","3.667 in",1]])),
+ problem:"All three panels are equal, but the panel that folds inside must be narrower",
+ pno:[["The brochure needs to be 8.5 × 11 in portrait","Tri-folds are designed flat at 11 × 8.5 in landscape."],["There's no bleed","A 0.125 in bleed is shown."],["There are too many folds","A tri-fold has two folds."]],
+ fix:"Move the fold guides so the fold-in panel is about 1/16 in narrower (for example 3.6875, 3.6875, 3.625 in)",
+ fno:[["Make the middle panel narrower","The fold-in (end) panel is the one that must tuck inside."],["Keep equal panels and add more bleed","Bleed doesn't stop the fold-in panel from buckling against the fold."]],
+ why:"The panel that folds inside needs to be slightly narrower or it hits the fold and buckles. Ask the printer or bindery for their exact panel widths."},
+
+/* ── LAYERS ── */
+{cat:"layers",app:"Illustrator",title:"Everything on one layer",ticket:["Packaging (box)","Dieline supplied","Printer edits text late"],
+ view:()=>win("Illustrator","tea-box.ai",page({w:5,h:4,bleed:.125,items:[[0,0,5,4,"background:#F4EDE1",""],[0,0,5,1.3,"background:#1F6F5C",""],[.4,1.6,4,.6,"",T("Garden Mint Tea","font-size:16px")],[.4,2.4,3,1,"",lorem(4)]]}),layers([{n:"Layer 1",c:"#4a90e2",t:"186 objects",hot:1}])),
+ problem:"All artwork, text, and the dieline share one layer with 186 objects",
+ pno:[["The document has too many layers","It has only one."],["The layer is locked","The layer shows no lock."],["The background doesn't reach the bleed","The background extends to the bleed."]],
+ fix:"Split the file into named layers such as Dieline, Text, Graphics, and Background",
+ fno:[["Group everything into one group","Grouping doesn't help anyone isolate the dieline or text."],["Lock Layer 1 before sending","Locking doesn't separate the content."]],
+ why:"Named layers let the printer hide art to check the dieline, edit text safely, and output plates. Keep the dieline on its own top layer."},
+{cat:"layers",app:"InDesign",title:"Notes that will print",ticket:["Annual report","Client comments removed before print"],
+ view:()=>win("InDesign","annual-report.indd",page({w:8.5,h:11,bleed:.125,margin:.6,items:[[.6,.6,7.3,.7,"",T("2025 at a Glance","font-size:22px")],[.6,1.6,7.3,5,"",lorem(20)],[4.4,8.6,3.6,.9,"background:#FFF59D;padding:4px;transform:rotate(-2deg)",T("CLIENT: swap photo on p.4?","font-size:10px")]]}),layers([{n:"Notes",c:"#f5b400",t:"prints",hot:1},{n:"Text",c:"#4a90e2"},{n:"Images",c:"#50c878"},{n:"Background",c:"#e25555"}])),
+ problem:"The Notes layer with client comments is set to print",
+ pno:[["The Notes layer should be at the bottom","Its position in the stack doesn't matter; its print setting does."],["The text layer is locked","It isn't locked."],["The page has no bleed","A bleed is set."]],
+ fix:"Open the Notes layer's Layer Options and turn off Print Layer (or delete the notes before export)",
+ fno:[["Hide the layer with the eye icon","Hiding works only if export is set to visible layers, and it's easy to switch back on. Make it non-printing."],["Change the note color to white","White objects still knock out and can print over art."]],
+ why:"Keep comments and instructions on a non-printing layer. It stays in the file for the team but never reaches the PDF."},
+{cat:"layers",app:"Illustrator",title:"A dieline mixed into the art",ticket:["Die-cut label","Dieline as spot color \"Dieline\" on its own layer"],
+ view:()=>win("Illustrator","candle-label.ai",page({w:4,h:3,bleed:.125,items:[[0,0,4,3,"background:#E7B75F",""],[.2,.2,3.6,2.6,"border:1px solid #ff00aa;border-radius:40px",""],[.8,1.1,2.4,.5,"",T("Amber & Oak","font-size:14px")]]}),layers([{n:"Artwork",c:"#4a90e2",t:"art + cut line",hot:1}])+swatches([{n:"Magenta (cut line)",c:"#ff00aa",t:"CMYK 0/100/0/0",hot:1},{n:"Gold",c:"#E7B75F",t:"CMYK"}])),
+ problem:"The cut line is a process-magenta stroke on the artwork layer, so it will print on the label",
+ pno:[["The label has no bleed","A bleed is set."],["The cut line should be dashed","Line style doesn't matter; its color and layer do."],["The gold swatch is RGB","It's CMYK."]],
+ fix:"Move the cut line to its own Dieline layer, color it with a spot swatch named \"Dieline\", and set it to overprint",
+ fno:[["Make the cut line 100% black","Black prints just like magenta; it must be a separate spot color."],["Delete the cut line","The cutting die needs the dieline."]],
+ why:"Dielines must never print. A named spot color on its own layer lets the printer send it to the cutter only. Overprint keeps it from knocking a white line out of the art."},
+{cat:"layers",app:"InDesign",title:"An old version hidden in the file",ticket:["Event program","Final text approved 5/2"],
+ view:()=>win("InDesign","program-FINAL.indd",page({w:5.5,h:8.5,bleed:.125,margin:.5,items:[[.5,.5,4.5,.5,"",T("Evening Program","font-size:16px")],[.5,1.2,4.5,6,"",lorem(20)]]}),layers([{n:"Text (v3 approved)",c:"#4a90e2"},{n:"Text OLD v1",c:"#9b59b6",vis:false,t:"hidden",hot:1},{n:"Images",c:"#50c878"}])),
+ problem:"A hidden layer still holds an old, unapproved version of the text",
+ pno:[["The approved text layer is locked","It isn't locked."],["There are too few layers","Three layers is fine."],["The page is the wrong size","Nothing indicates that."]],
+ fix:"Delete the old hidden layer before packaging and sending the file",
+ fno:[["Leave it hidden; it won't export","Anyone can turn it back on, and some export settings include hidden layers. Remove it."],["Rename it \"Do not print\"","The old content is still one click from printing."]],
+ why:"Final files should contain only what prints. Leftover layers cause confusion at the printer and a real risk of printing the wrong version."},
+
+/* ── COLOR ── */
+{cat:"color",app:"InDesign",title:"RGB swatches in a CMYK job",ticket:["Brochure","4-color process only"],
+ view:()=>win("InDesign","museum-brochure.indd",page({w:8.5,h:11,bleed:.125,margin:.5,items:[[-.125,-.125,8.75,3,"background:#0080ff",""],[.5,3.4,7.5,.7,"",T("The Textile Rooms","font-size:22px;color:#0080ff")],[.5,4.3,7.5,5,"",lorem(18)]]}),swatches([{n:"[Paper]",c:"#fff"},{n:"[Black]",c:"#111",t:"CMYK"},{n:"Museum Blue",c:"#0080ff",t:"RGB 0/128/255",hot:1},{n:"Stone",c:"#d8d2c4",t:"CMYK"}])),
+ problem:"The main brand swatch is defined in RGB instead of CMYK",
+ pno:[["The document has a spot color","All swatches here are process colors."],["[Black] is set incorrectly","[Black] is 100% K, which is correct."],["The blue band doesn't reach the bleed","It extends into the bleed."]],
+ fix:"Open <span class=path>Swatch Options</span> and change Museum Blue's color mode to CMYK, choosing values that match the brand's print spec",
+ fno:[["Leave it; the PDF will convert it","Conversion will shift this bright blue unpredictably. Define the CMYK values yourself."],["Change it to a spot color","The job is process only; a spot adds a plate."]],
+ why:"Swatches keep whatever color mode they were created in. Brand guides usually list separate CMYK values for print. Use them so the color is predictable."},
+{cat:"color",app:"InDesign",title:"An accidental spot color",ticket:["Flyer","4-color process only (no spot inks)"],
+ view:()=>win("InDesign","gallery-flyer.indd",page({w:8.5,h:11,bleed:.125,margin:.5,items:[[.5,.5,7.5,1,"",T("MASS & SPACE","font-size:22px;color:#C8102E")],[.5,1.8,7.5,6,"",lorem(20)]]}),swatches([{n:"[Black]",c:"#111",t:"CMYK"},{n:"PANTONE 186 C",c:"#C8102E",t:"Spot ●",hot:1}])+seps([{n:"CMYK",c:"linear-gradient(90deg,#0ff,#f0f,#ff0,#000)"},{n:"Cyan",c:"#0ff"},{n:"Magenta",c:"#f0f"},{n:"Yellow",c:"#ff0"},{n:"Black",c:"#000"},{n:"PANTONE 186 C",c:"#C8102E",hot:1}])),
+ problem:"A Pantone spot swatch will output a fifth plate on a 4-color job",
+ pno:[["The flyer uses too much black","Nothing shows a black-coverage issue."],["The swatch is RGB","It's a spot color, not RGB."],["The headline needs overprint","Overprint isn't the problem here."]],
+ fix:"Convert the swatch to process in <span class=path>Swatch Options</span> (Color Type: Process), or use <span class=path>Ink Manager › All Spots to Process</span>",
+ fno:[["Delete the swatch","Deleting asks for a replacement color anyway, and you'd lose the brand red. Convert it."],["Rename it \"Red\"","A renamed spot color is still a spot plate."]],
+ why:"Every spot color becomes its own printing plate. On a 4-color job an extra plate costs money or fails at the printer. Separations Preview shows every plate before you export."},
+{cat:"color",app:"InDesign",title:"The same Pantone twice",ticket:["Two-color letterhead","Black + PANTONE 3435 C only"],
+ view:()=>win("InDesign","letterhead-2color.indd",page({w:8.5,h:11,margin:.6,items:[[.6,.6,3,.5,"",T("Greenline Studio","font-size:13px;color:#1D4F3A")],[.6,10,7.3,.3,"border-top:2px solid #1D4F3A",""]]}),swatches([{n:"[Black]",c:"#111",t:"CMYK"},{n:"PANTONE 3435 C",c:"#1D4F3A",t:"Spot ●"},{n:"PANTONE 3435 CP",c:"#1F4E3B",t:"Spot ●",hot:1}])+seps([{n:"Black",c:"#000"},{n:"PANTONE 3435 C",c:"#1D4F3A"},{n:"PANTONE 3435 CP",c:"#1F4E3B",hot:1}])),
+ problem:"Two differently named versions of the same Pantone create a third plate",
+ pno:[["Black should be a spot color","[Black] prints on its own plate already."],["The letterhead needs bleed","This design doesn't touch the edges."],["The green is too dark","The color value isn't the problem; the duplicate ink is."]],
+ fix:"Replace the CP swatch with the C swatch, or map it in <span class=path>Ink Manager</span> with Ink Alias → PANTONE 3435 C",
+ fno:[["Convert both greens to process","The job is specified as a two-color spot job."],["Tell the printer to ignore the extra plate","Print what you mean; don't rely on the printer to guess."]],
+ why:"Spot colors are matched by name. \"3435 C\" and \"3435 CP\" (often from placed logos) look alike but output separate plates. Check Separations Preview for surprise inks."},
+{cat:"color",app:"Illustrator",title:"Black text built from Registration",ticket:["Postcard","CMYK","Small type 100% K only"],
+ view:()=>win("Illustrator","reunion-postcard.ai",page({w:6,h:4,bleed:.125,margin:.25,items:[[.4,.4,5.2,.6,"",T("Class of 2006 Reunion","font-size:18px")],[.4,1.2,4,1.5,"",`<div style="font:400 8px/1.4 'Source Sans 3';color:#000">Saturday, June 13 · Harbor Hall · RSVP by May 1 at reunion2006.org</div>`]]}),swatches([{n:"[Registration]",c:"#000",t:"C100 M100 Y100 K100",hot:1},{n:"[Black]",c:"#111",t:"K100"}])+dlg("Info",[["Selected text fill","[Registration]",1],["Total ink","400%",1]])),
+ problem:"The text uses [Registration] (400% ink) instead of [Black]",
+ pno:[["The text should be rich black","Small text should be 100% K only, not rich black."],["The postcard needs a spot color","The job is CMYK."],["The text is outside the safe zone","It's inside the margins."]],
+ fix:"Select the text and apply the [Black] swatch (100% K)",
+ fno:[["Keep it; it looks the blackest on screen","On press it will smear, dry slowly, and misregister on every plate."],["Set the text to overprint","Overprint doesn't reduce 400% ink."]],
+ why:"[Registration] prints 100% of every ink. It's only for crop and registration marks. Any misregistration makes small type fuzzy, and 400% ink can smear and set off."},
+{cat:"color",app:"InDesign",title:"Small text in rich black",ticket:["Newsletter","CMYK","Body text 100% K"],
+ view:()=>win("InDesign","newsletter-april.indd @ 800%",`<div style="background:#fff;padding:20px;width:280px"><div style="font:400 18px/1.4 'Source Serif 4';color:#000;text-shadow:1px 0 rgba(0,255,255,.8),-1px 1px rgba(255,0,255,.7),0 -1px rgba(255,210,0,.7)">The library turns 100</div><div style="font:500 10px/1 var(--mono);color:#888;margin-top:10px">8 pt body text, zoomed 800% (misregistration preview)</div></div>`,swatches([{n:"Rich Black",c:"#0b0b0b",t:"C60 M40 Y40 K100",hot:1},{n:"[Black]",c:"#111",t:"K100"}])),
+ problem:"8 pt body text uses rich black, so slight misregistration will show colored fringes",
+ pno:[["The text should use [Registration]","Registration is 400% ink; it's worse."],["Rich black is never allowed","Rich black is right for large dark areas, just not small text."],["The newsletter must be converted to RGB","Print stays CMYK."]],
+ fix:"Apply [Black] (100% K) to body text and keep rich black for large solid areas",
+ fno:[["Make the text bold so the fringes hide","Heavier type still shows colored edges."],["Increase the rich black to 100/100/100/100","That's registration color: more ink, more fringing."]],
+ why:"Four plates can't align perfectly. Small type in four inks shows cyan or magenta halos. 100% K on one plate stays crisp, and [Black] overprints by default so there are no gaps."},
+
+/* ── OVERPRINT ── */
+{cat:"overprint",app:"Illustrator",title:"White text set to overprint",ticket:["Poster","CMYK"],
+ view:()=>win("Illustrator","concert-poster.ai",page({w:18,h:24,bleed:.125,items:[[-.125,-.125,18.25,24.25,"background:#1E1B3A",""],[2,3,14,5,"",T("NORTHERN LIGHTS","font-size:22px;color:#fff")]],scale:11}),dlg("Window › Attributes (headline)",[["Overprint Fill","☑",1],["Fill","White (0/0/0/0)",1]])+`<div class="pn"><h4>View › Overprint Preview</h4><div class="row"><span class="nm">Headline disappears on the navy background</span></div></div>`),
+ problem:"The white headline is set to overprint, so it will disappear when printed",
+ pno:[["White can't be printed","White is printed by knocking out (leaving paper showing); it only fails when set to overprint."],["The background doesn't reach the bleed","It extends to the bleed."],["The headline is too large","Size isn't the issue."]],
+ fix:"Turn off Overprint Fill in <span class=path>Window › Attributes</span>, then check with <span class=path>View › Overprint Preview</span>",
+ fno:[["Change white to 1% cyan","A tint that overprints still mixes with the navy and disappears."],["Outline the text","Outlines keep the overprint attribute."]],
+ why:"White in print is no ink at all. Overprint means \"print on top without removing what's underneath,\" so overprinted white prints nothing. Overprint Preview shows the real result."},
+{cat:"overprint",app:"InDesign",title:"Black text that doesn't overprint",ticket:["Menu","CMYK","Black text overprints color"],
+ view:()=>win("InDesign","bistro-menu.indd",page({w:8.5,h:11,bleed:.125,margin:.5,items:[[-.125,-.125,8.75,11.25,"background:#F2B84B",""],[.6,.6,7,.7,"",T("Dinner","font-size:22px")],[.6,1.5,7,6,"",lorem(20)]]}),swatches([{n:"[Black]",c:"#111",t:"K100 · overprints"},{n:"Black copy",c:"#111",t:"K100 · knocks out",hot:1}])+dlg("Text fill",[["Body text swatch","Black copy",1]])),
+ problem:"Text uses a copied black swatch that knocks out instead of overprinting the yellow",
+ pno:[["The black is rich black","Both swatches are 100% K."],["The yellow is a spot color","Nothing shows a spot ink."],["The text is RGB","It's CMYK."]],
+ fix:"Apply the [Black] swatch to the text (or set the text to Overprint Fill)",
+ fno:[["Change the background to white","That changes the design."],["Convert the text to outlines","Outlines still knock out."]],
+ why:"InDesign's [Black] swatch overprints by default, so small black text prints on top of colors with no risk of white gaps. A duplicated black swatch loses that behavior."},
+{cat:"overprint",app:"InDesign",title:"Too much ink in the shadows",ticket:["Magazine spread","Coated stock","Max total ink 300%"],
+ view:()=>win("InDesign","night-sky-spread.indd",page({w:8.5,h:11,bleed:.125,items:[[-.125,-.125,8.75,11.25,"background:#050814",""],[.8,.8,6,1,"",T("A Night Without Light","font-size:15px;color:#fff")]]}),seps([{n:"Background swatch",c:"#050814",t:"C100 M90 Y80 K100",hot:1},{n:"Total ink",c:"#333",t:"370%",hot:1}])),
+ problem:"The rich black background is 370% total ink, above the 300% limit",
+ pno:[["Black backgrounds are not allowed","They're fine within the ink limit."],["The headline should overprint","White text must knock out."],["The spread needs a spot varnish","Not required by the ticket."]],
+ fix:"Change the background to a rich black within the limit, such as C60 M40 Y40 K100 (240%)",
+ fno:[["Use 100% K only","A large area of plain K looks dark gray; rich black is right here, just with less ink."],["Keep 370% and let the printer adjust","Heavy ink can smear and dry slowly; meet the spec."]],
+ why:"Every printer sets a total ink limit. Too much ink smears, sets off onto facing pages, and dries slowly. A standard rich black gives deep color at a safe total."},
+{cat:"overprint",app:"Illustrator",title:"Hairline rules that vanish",ticket:["Invoice form","Offset print","Minimum line weight 0.25 pt"],
+ view:()=>win("Illustrator","invoice-form.ai @ 300%",`<div style="background:#fff;padding:18px;width:280px">${[0,1,2,3,4].map(()=>`<div style="height:20px;border-bottom:.5px solid #bbb"></div>`).join("")}<div style="font:500 10px/1 var(--mono);color:#888;margin-top:10px">Table rules</div></div>`,dlg("Stroke panel (table rules)",[["Weight","0.1 pt",1],["Color","K 40%",1]])),
+ problem:"The table rules are 0.1 pt tints, too thin to print reliably",
+ pno:[["The rules should be spot colors","Color type isn't the problem."],["The invoice has no bleed","Forms often don't need bleed."],["The rules should overprint","Overprint won't make a line thicker."]],
+ fix:"Set the rule weight to at least 0.25 pt (and use a darker tint or solid)",
+ fno:[["Make them 0 pt so they're hairlines","\"Hairline\" output varies by device and may disappear entirely."],["Rasterize the table","Rasterizing makes thin lines worse."]],
+ why:"Very thin strokes can break up or disappear on press, especially in a light tint that's also screened. 0.25 pt is a common minimum."},
+
+/* ── IMAGES ── */
+{cat:"images",app:"InDesign",title:"A missing image",ticket:["Brochure","Send packaged InDesign file"],
+ view:()=>win("InDesign","museum-brochure.indd",page({w:8.5,h:11,bleed:.125,margin:.5,items:[[.5,.5,7.5,4,"",photo()],[.5,4.8,7.5,5,"",lorem(18)]]}),links([{n:"gallery-hero.tif",s:"missing",t:"p.1",hot:1},{n:"logo.ai",s:"ok",t:"p.1"}])+pfBar(1)),
+ problem:"The hero image link is missing, so only a low-resolution preview will print",
+ pno:[["The image is low resolution","The link can't be checked because the file is missing."],["The logo needs updating","The logo link is OK."],["The image is embedded","It's linked, but the linked file can't be found."]],
+ fix:"Use <span class=path>Relink</span> in the Links panel to point to the original file, then package the job",
+ fno:[["Screenshot the preview and place it","That's a low-resolution preview."],["Ignore it; the preview looks fine","InDesign prints only the low-resolution proxy when the link is missing."]],
+ why:"InDesign places a preview but prints from the linked file. A missing link (red stop icon) outputs a blurry proxy. Relink, then use File › Package so the image travels with the file."},
+{cat:"images",app:"InDesign",title:"An image changed after placing",ticket:["Catalog","Final images only"],
+ view:()=>win("InDesign","catalog-p12.indd",page({w:8.5,h:11,bleed:.125,margin:.5,items:[[.5,.5,3.6,3,"",photo("#c9793b","#f2dcc0")],[4.4,.5,3.6,3,"",photo("#7fa88f","#e8e2c8")],[.5,3.8,7.5,6,"",lorem(20)]]}),links([{n:"tote-bag.psd",s:"modified",t:"p.12",hot:1},{n:"pin.psd",s:"ok",t:"p.12"}])+pfBar(1)),
+ problem:"The tote-bag image was edited after placing and the layout shows the old version",
+ pno:[["The image is missing","A modified link means the file exists but has changed."],["Both images are too small","Resolution isn't flagged."],["The page needs more bleed","Bleed isn't the issue."]],
+ fix:"Select it in the Links panel and choose <span class=path>Update Link</span>, then check the new version in the layout",
+ fno:[["Re-export the PDF without updating","The PDF would contain the old image."],["Delete and re-place the image","That works but loses cropping and position; Update Link keeps them."]],
+ why:"A modified link (yellow warning) means the file on disk is newer than what the layout shows. Update links and look at the result before output."},
+{cat:"images",app:"InDesign",title:"A web image in print",ticket:["Poster","18 × 24 in","Images 300 ppi effective"],
+ view:()=>win("InDesign","food-drive-poster.indd",page({w:18,h:24,bleed:.125,margin:1,items:[[-.125,-.125,18.25,12,"",pix],[1,13,16,3,"",T("COMMUNITY FOOD DRIVE","font-size:15px")]],scale:11}),links([{n:"food-photo.jpg",s:"ok",t:"RGB",hot:1}])+dlg("Link Info",[["Actual PPI","72",1],["Effective PPI","72",1],["Dimensions","1300 × 870 px"]])),
+ problem:"The photo is a 72 ppi web image; at poster size it will print pixelated",
+ pno:[["The link is missing","The link is OK."],["The image needs to be CMYK only","Color mode is a separate issue; resolution is the real problem here."],["The poster needs a spot color","Not relevant."]],
+ fix:"Replace it with a high-resolution original (about 5,400 × 3,600 px for 18 × 12 in at 300 ppi)",
+ fno:[["Change the resolution to 300 ppi in Photoshop without adding pixels","That just shrinks the print size; the pixel count is what matters."],["Upscale it to 300 ppi","Upsampling adds blur, not detail."]],
+ why:"Print needs about 300 effective ppi at final size. A 1300-pixel web image can only print about 4.3 in wide at 300 ppi. Always get the original, full-size file."},
+{cat:"images",app:"InDesign",title:"A sharp photo scaled too large",ticket:["Magazine","Images 300 ppi effective (min 250)"],
+ view:()=>win("InDesign","feature-p22.indd",page({w:8.5,h:11,bleed:.125,margin:.5,items:[[-.125,-.125,8.75,7,"",photo("#8aa4c9","#e8d8b8")],[.5,7.3,7.5,3,"",lorem(12)]]}),links([{n:"harbor.jpg",s:"ok",t:"CMYK",hot:1}])+dlg("Link Info",[["Actual PPI","300"],["Effective PPI","120",1],["Scale","250%",1]])),
+ problem:"The photo is enlarged to 250%, so its effective resolution drops to 120 ppi",
+ pno:[["The actual resolution is too low","300 actual ppi is fine at 100% scale."],["The image is RGB","It's CMYK."],["The image is missing","The link is OK."]],
+ fix:"Use a larger original, or reduce the scale so the effective resolution is at least 250–300 ppi",
+ fno:[["Change actual PPI to 600 in Photoshop without resampling","That shrinks the printable size; it doesn't add pixels."],["Apply sharpening","Sharpening can't add detail to an enlarged image."]],
+ why:"Effective ppi = actual ppi ÷ scale. 300 ppi at 250% is 120 ppi. Check Effective PPI in the Links panel's Link Info, not just Actual."},
+{cat:"images",app:"InDesign",title:"RGB photos in a CMYK workflow",ticket:["Brochure","PDF/X-1a (CMYK only)","Images converted to printer's profile"],
+ view:()=>win("InDesign","college-brochure.indd",page({w:8.5,h:11,bleed:.125,margin:.5,items:[[-.125,-.125,8.75,5,"",photo("#00b4ff","#9CCB2B")],[.5,5.4,7.5,4,"",lorem(16)]]}),links([{n:"campus-sky.jpg",s:"ok",t:"RGB",hot:1},{n:"students.jpg",s:"ok",t:"RGB",hot:1},{n:"logo.ai",s:"ok",t:"CMYK"}])+preflight([{n:"Color space not allowed: RGB (2)",e:1,hot:1}])),
+ problem:"Two placed photos are RGB, but the printer requires CMYK images for PDF/X-1a",
+ pno:[["The logo must be RGB too","The logo is already CMYK."],["The images are missing","Both links are OK."],["The photos are too low resolution","Resolution isn't flagged."]],
+ fix:"Convert the photos to CMYK in Photoshop using the printer's profile, check the colors, and update the links",
+ fno:[["Change the document color mode to RGB","InDesign doesn't have a document color mode; the output must be CMYK."],["Rename the files to .tif","The color space stays RGB."]],
+ why:"Bright RGB blues and greens shift when converted. Converting deliberately, with the printer's profile, lets you see and correct the change. (Some printers accept RGB with PDF/X-4. Follow their spec.)"},
+
+/* ── TYPE ── */
+{cat:"type",app:"InDesign",title:"A missing font",ticket:["Book cover","Send packaged files"],
+ view:()=>win("InDesign","cover-final.indd",page({w:6,h:9,bleed:.125,margin:.5,items:[[-.125,-.125,6.25,9.25,"background:#2E4A3F",""],[.5,1,5,1.8,"background:#ff9ccf",T("The Salt Road","font-size:24px;color:#fff")]]}),dlg("Type › Find/Replace Font",[["Freight Display Pro Bold","⚠ missing",1],["Source Sans 3 Regular","✓"]])+pfBar(1)),
+ problem:"The title font is missing, so InDesign is substituting another font (pink highlight)",
+ pno:[["The text is overset","Nothing shows overset text."],["The cover needs more bleed","Bleed is set."],["The title color is wrong","The pink is InDesign's missing-font highlight, not a color."]],
+ fix:"Activate or install the font (for example, through Adobe Fonts), or replace it in <span class=path>Type › Find/Replace Font</span>, then package the job",
+ fno:[["Export anyway; the PDF will fix it","The substituted font would be embedded instead."],["Outline the pink text","Outlining a substituted font locks in the wrong letters."]],
+ why:"Missing fonts are one of the most common preflight errors. InDesign highlights substituted text in pink. Fix the font before export, then include fonts you're licensed to share when you package."},
+{cat:"type",app:"InDesign",title:"Text that doesn't fit",ticket:["Program page","Approved copy only"],
+ view:()=>win("InDesign","program-p3.indd",page({w:5.5,h:8.5,bleed:.125,margin:.5,items:[[.5,.5,4.5,.5,"",T("Director's Note","font-size:14px")],[.5,1.1,4.5,3.4,"border:1px solid #4a90e2",lorem(12)+`<span style="position:absolute;right:-2px;bottom:-2px;width:10px;height:10px;background:#fff;border:1px solid #d00;color:#d00;font:700 9px/8px Arial;text-align:center">+</span>`]]}),preflight([{n:"Overset text (1)",e:1,hot:1,t:"p.3"}])),
+ problem:"The text frame is overset (red +), so the end of the text won't print",
+ pno:[["A font is missing","No missing fonts are reported."],["The page needs more bleed","Not relevant."],["The frame is too wide","Its width isn't flagged."]],
+ fix:"Enlarge the frame, thread it to another frame, or edit the copy (with approval) until the overset clears",
+ fno:[["Reduce the tracking to −100","That damages readability; fix the fit properly."],["Ignore it; it's only a few words","Missing words in print are a real error. Preflight should show no overset text."]],
+ why:"Overset text is hidden text that won't print. Preflight lists it as an error because readers lose content without anyone noticing."},
+{cat:"type",app:"Illustrator",title:"Tiny type reversed out of four colors",ticket:["Coupon","Small type min. 7 pt; avoid 4-color reverses"],
+ view:()=>win("Illustrator","coupon.ai @ 400%",`<div style="background:#5a2d82;padding:18px;width:290px"><div style="font:400 6px/1.4 'Source Serif 4';color:#fff;letter-spacing:.2px">Offer valid through May 31. One coupon per visit. Not valid with other offers. See store for details.</div><div style="font:500 9px/1 var(--mono);color:#ccc;margin-top:12px">Background C75 M100 Y0 K5 · type 5 pt serif, white</div></div>`,dlg("Character (fine print)",[["Font","Serif, Light",1],["Size","5 pt",1],["Background","4-color purple",1]])),
+ problem:"5 pt light serif text reversed out of a 4-color background will fill in and break up",
+ pno:[["White can't be printed","White type is printed by knocking out the background; it's the size and style that are risky."],["The purple is a spot color","It's a process build."],["The coupon has no bleed","Not shown as an issue."]],
+ fix:"Enlarge the text to at least 7 pt, use a bolder sans-serif, or place it on a light panel",
+ fno:[["Make the text rich black","It would disappear on the dark purple."],["Add a thin white stroke","Strokes make small text even more fragile."]],
+ why:"Reversed type relies on four plates staying aligned around tiny gaps. Hairline serifs fill in with ink. Small reversed text should be larger, heavier, and sans serif, or not reversed at all."},
+{cat:"type",app:"Illustrator",title:"Logo type sent to a vendor",ticket:["Logo files for sign shop","Vendor doesn't have your fonts"],
+ view:()=>win("Illustrator","greenline-logo.ai",`<div style="background:#fff;padding:26px;width:280px;text-align:center"><div style="font:700 28px/1 'Source Serif 4';color:#1D4F3A">Greenline</div><div style="font:600 10px/1 'Source Sans 3';letter-spacing:.3em;margin-top:6px;color:#1D4F3A">BAKERY</div></div>`,dlg("Selection",[["Object type","Live type (2 text objects)",1],["Fonts","Source Serif 4 Bold, Source Sans 3 Semibold"]])),
+ problem:"The logo is live type, so the sign shop's system will substitute its own fonts",
+ pno:[["The logo must be RGB","Sign vendors usually want vector files with specified colors, not RGB."],["The logo needs bleed","Logos don't need bleed."],["The type should be rasterized","Rasterizing loses the sharp vector edges."]],
+ fix:"Save a copy and convert the type to outlines (<span class=path>Type › Create Outlines</span>), keeping the live-type original for edits",
+ fno:[["Email the vendor the font files","Most font licenses don't allow sharing with other companies."],["Export it as a 72 ppi JPG","Sign making needs vectors."]],
+ why:"Final logo artwork is outlined so it looks the same everywhere without fonts. Keep an editable master and send outlined copies."},
+
+/* ── STYLES ── */
+{cat:"styles",app:"InDesign",title:"Styles covered in overrides",ticket:["Annual report","Consistent headings throughout"],
+ view:()=>win("InDesign","annual-report.indd",page({w:8.5,h:11,bleed:.125,margin:.6,items:[[.6,.6,7,.5,"",T("Our Mission","font-size:18px")],[.6,1.3,7,2,"",lorem(8)],[.6,3.5,7,.5,"",T("Our Impact","font-size:15px;font-style:italic")],[.6,4.2,7,2,"",lorem(8)]]}),pn("Paragraph Styles",[["Heading 1+",1],["Heading 1+",1],["Body",0]].map(r=>`<div class="row ${r[1]?"hot":""}"><span class="nm">${r[0]}</span><span class="tg">${r[1]?"local override":""}</span></div>`).join(""))),
+ problem:"The headings use a paragraph style but carry local overrides (the +), so they don't match",
+ pno:[["There are too many styles","Only two styles are used."],["The body text has no style","Body text uses the Body style."],["The page needs a parent page","Not related to the heading mismatch."]],
+ fix:"Select the headings and click <span class=path>Clear Overrides</span> in the Paragraph Styles panel (or redefine the style if the change is intended)",
+ fno:[["Retype the headings","The overrides would come right back if formatting is applied manually."],["Make each heading a new style","That multiplies inconsistency."]],
+ why:"A + after a style name means manual formatting sits on top of the style. Clearing overrides returns every heading to one definition, which is what the printer and client expect."},
+{cat:"styles",app:"InDesign",title:"Formatting done by hand",ticket:["40-page catalog","Editable by the client later"],
+ view:()=>win("InDesign","catalog.indd",page({w:8.5,h:11,bleed:.125,margin:.5,items:[[.5,.5,7.5,.5,"",T("Garden Tools","font-size:16px")],[.5,1.2,7.5,8,"",lorem(26)]]}),pn("Paragraph Styles",`<div class="row hot"><span class="nm">[Basic Paragraph]</span><span class="tg">used on 100% of text</span></div>`)+dlg("Character panel",[["Headings","set manually: 16 pt Bold",1],["Body","set manually: 9.5/13",1]])),
+ problem:"All text is [Basic Paragraph] with manual formatting; there are no paragraph styles",
+ pno:[["The document has local overrides","There's no style to override; everything is manual."],["The fonts are missing","No missing fonts are shown."],["The catalog has too many pages","40 is fine for perfect binding or saddle stitching (multiple of 4)."]],
+ fix:"Create paragraph styles (Heading, Body, Caption, Price) and apply them throughout",
+ fno:[["Keep it; it looks right","A late change to body text means editing 40 pages by hand, with mistakes."],["Use Find/Change to fix everything later","Styles make later changes one edit."]],
+ why:"Paragraph and character styles are how professionals keep long documents consistent and editable. One change to the style updates every paragraph."},
+{cat:"styles",app:"InDesign",title:"Page numbers typed by hand",ticket:["24-page booklet","Page numbers on every page"],
+ view:()=>win("InDesign","program-booklet.indd",page({w:5.5,h:8.5,bleed:.125,margin:.5,items:[[.5,1,4.5,6.5,"",lorem(20)],[2.5,8,.5,.2,"",T("7","font-size:8px;text-align:center")]]}),pn("Pages",`<div class="row"><span class="nm">A-Parent (empty)</span></div><div class="row hot"><span class="nm">Pages 1–24: numbers typed in text frames</span></div>`)),
+ problem:"Page numbers are typed manually instead of placed on the parent page",
+ pno:[["The booklet needs more pages","24 is a multiple of 4."],["The page number is outside the margins","Folios often sit in the margin; that's normal."],["The page needs bleed","Bleed is set."]],
+ fix:"On the parent page, insert <span class=path>Type › Insert Special Character › Markers › Current Page Number</span> and delete the typed numbers",
+ fno:[["Renumber them carefully by hand","Any added or moved page breaks every number after it."],["Put the numbers on a separate layer","The numbers would still be manual."]],
+ why:"Parent pages hold repeating items. An auto page-number marker updates when pages are added, deleted, or reordered."},
+{cat:"styles",app:"Illustrator",title:"A brand color that isn't global",ticket:["Illustration set","Client may adjust brand teal"],
+ view:()=>win("Illustrator","icon-set.ai",`<div style="background:#fff;padding:16px;display:grid;grid-template-columns:repeat(4,48px);gap:12px">${Array(8).fill(0).map(()=>`<div style="width:48px;height:48px;border-radius:12px;background:#129489"></div>`).join("")}</div>`,swatches([{n:"Brand Teal",c:"#129489",t:"process, not global",hot:1},{n:"Brand Teal copy",c:"#139389",t:"process, not global",hot:1}])),
+ problem:"The brand swatch isn't global (and has a duplicate), so editing it won't update the artwork",
+ pno:[["The teal is a spot color","It's a process color."],["The icons need bleed","Icons on a sheet don't need bleed."],["The document is RGB","Color mode isn't shown as the issue."]],
+ fix:"Delete the duplicate, then in <span class=path>Swatch Options</span> turn on Global and reapply the swatch",
+ fno:[["Change each icon's color by hand when needed","Slow, and easy to miss one."],["Convert the teal to RGB","Doesn't make it update."]],
+ why:"In Illustrator, only global swatches update every object that uses them. Duplicates like \"copy\" swatches lead to near-matching colors across a set."},
+
+/* ── EXPORT ── */
+{cat:"export",app:"InDesign",title:"The wrong PDF preset",ticket:["Brochure","PDF/X-1a:2001","CMYK · 0.125 in bleed · crop marks"],
+ view:()=>win("InDesign","Export Adobe PDF",null,dlg("Export Adobe PDF",[["Adobe PDF Preset","[Smallest File Size]",1],["Compatibility","Acrobat 6"],["Images","Downsampled to 100 ppi",1],["Output › Color Conversion","Convert to Destination: sRGB",1],["Marks and Bleeds","None",1]]),true),
+ problem:"It's exporting with Smallest File Size: low-resolution, RGB, no marks or bleed",
+ pno:[["Acrobat 6 compatibility is the only problem","Compatibility is minor compared to downsampling, RGB, and missing bleed."],["The document is missing fonts","Nothing indicates missing fonts."],["The file name is wrong","Names don't affect printing."]],
+ fix:"Choose the <span class=path>[PDF/X-1a:2001]</span> preset (or the printer's own .joboptions), then turn on crop marks and Use Document Bleed Settings",
+ fno:[["Use [High Quality Print] without changes","It may not convert to CMYK or add bleed and marks; use the preset the printer asked for."],["Export a JPG instead","Printers need a PDF built to their spec."]],
+ why:"Presets bundle dozens of settings. Smallest File Size is for email and screen. Print needs the printer's PDF/X standard, full-resolution images, CMYK, and bleed."},
+{cat:"export",app:"InDesign",title:"Crop marks inside the bleed",ticket:["Postcard","0.125 in bleed","Crop marks"],
+ view:()=>win("InDesign","Export Adobe PDF",`<div style="position:relative;width:260px;height:190px;background:#fff"><div style="position:absolute;left:20px;top:20px;right:20px;bottom:20px;background:#1F6F5C"></div>${[[18,8,1,16],[8,18,16,1],[241,8,1,16],[236,18,16,1],[18,166,1,16],[8,171,16,1],[241,166,1,16],[236,171,16,1]].map(([l,t,w,h])=>`<i style="position:absolute;left:${l}px;top:${t}px;width:${w}px;height:${h}px;background:#000"></i>`).join("")}</div>`,dlg("Marks and Bleeds",[["Crop Marks","☑"],["Offset","0 in",1],["Bleed","0.125 in"]])),
+ problem:"The crop mark offset is 0, so the marks print into the bleed artwork",
+ pno:[["There's no bleed","Bleed is 0.125 in."],["Crop marks aren't needed","The ticket asks for them."],["The marks are the wrong color","Crop marks are Registration color by default, which is correct."]],
+ fix:"Set the crop mark Offset to at least the bleed (0.125 in)",
+ fno:[["Turn off bleed","Then the colored background would stop at the trim."],["Draw your own crop marks","Manual marks are error-prone; use the export settings."]],
+ why:"Crop marks must sit outside the bleed area. If they start at the trim, they overlap the bleed and can print on the trimmed piece."},
+{cat:"export",app:"InDesign",title:"Sending just the .indd file",ticket:["Printer wants native files","Include fonts and links"],
+ view:()=>win("InDesign","Email attachment",null,files([{e:"INDD",n:"annual-report.indd",s:"4.2 MB",hot:1},{e:"—",n:"(no Links folder)",s:""},{e:"—",n:"(no Document fonts folder)",s:""}]),true),
+ problem:"Only the InDesign file was sent, without its linked images or fonts",
+ pno:[["The file is too large to email","4 MB is small; the problem is what's missing."],["InDesign files can't be sent to printers","Many printers accept packaged native files."],["The file needs to be an .idml","IDML is for opening in older versions; it still needs links and fonts."]],
+ fix:"Use <span class=path>File › Package</span> to collect the .indd, all links, licensed fonts, a PDF, and an IDML into one folder",
+ fno:[["Embed all images in the InDesign file","InDesign links images; packaging is the standard handoff."],["Send the images later if the printer asks","That delays the job and risks the wrong versions."]],
+ why:"An InDesign file only points to its images and fonts. Package gathers everything so the job opens correctly on the printer's computer."},
+{cat:"export",app:"InDesign",title:"A booklet that can't be stitched",ticket:["Saddle-stitched booklet","5.5 × 8.5 in"],
+ view:()=>win("InDesign","program-booklet.indd",null,pn("Pages",`<div class="row hot"><span class="nm">Document pages: 18</span><span class="tg">9 spreads</span></div>`)+dlg("Imposition check",[["Pages per sheet (folded)","4"],["18 ÷ 4","4.5 sheets",1]]),true),
+ problem:"18 pages isn't a multiple of 4, which saddle stitching requires",
+ pno:[["The page size is wrong for a booklet","5.5 × 8.5 in is standard half-letter."],["Saddle stitching needs a spine","Saddle-stitched books don't have a printed spine."],["The booklet needs facing pages off","Booklets use facing pages."]],
+ fix:"Change the page count to 16 or 20 (edit content, or add notes pages)",
+ fno:[["Leave two blank pages at the end","That's one way to reach 20, but it must be planned in the file, not left to the printer."],["Print two single pages and glue them in","Loose inserts are a different, costlier job."]],
+ why:"Each folded sheet in a saddle-stitched booklet makes 4 pages. The total must be divisible by 4."},
+
+/* ── DIGITAL ── */
+{cat:"digital",app:"Web",title:"A CMYK image on a website",ticket:["Website hero image","sRGB"],
+ view:()=>win("Browser","riverside-museum.org",null,files([{e:"JPG",n:"hero-cmyk.jpg · CMYK (US Web Coated)",s:"2.8 MB",hot:1}])+`<div class="web" style="margin:10px"><div style="height:120px;background:linear-gradient(165deg,#6b8aa3,#c3b89a)"></div><div style="padding:10px;font:700 14px/1.2 'Source Sans 3'">Colors look dull and shifted on screen</div></div>`,true),
+ problem:"The web image was saved in CMYK instead of sRGB",
+ pno:[["The image is too small","Size isn't the problem shown."],["JPG can't be used on the web","JPG is standard for web photos."],["The website needs a CMYK profile","Browsers expect sRGB."]],
+ fix:"Export from the RGB original as sRGB (for example <span class=path>File › Export › Export for Screens</span> or Photoshop's Export As, with Convert to sRGB)",
+ fno:[["Convert the CMYK file back to RGB","Colors lost in CMYK conversion don't come back; start from the RGB original."],["Save it as a PDF","Web pages display images, not PDFs."]],
+ why:"Screens display RGB. CMYK images look wrong in browsers and lose the bright colors screens can show. Web images should be sRGB."},
+{cat:"digital",app:"Web",title:"A logo with a white box",ticket:["Logo for dark website footer","Transparent background"],
+ view:()=>win("Browser","greenline.co (footer)",null,`<div class="web" style="margin:10px;background:#1C2B3A;padding:20px;max-width:none"><div style="display:inline-block;background:#fff;padding:8px 14px;font:700 18px/1 'Source Serif 4';color:#1D4F3A">Greenline</div><div style="color:#AFC2D3;font:400 12px/1.4 'Source Sans 3';margin-top:10px">© 2026 Greenline Bakery</div></div>`+files([{e:"JPG",n:"logo.jpg",s:"48 KB",hot:1}]),true),
+ problem:"The logo was exported as a JPG, which can't be transparent, so it shows a white box",
+ pno:[["The logo is the wrong color","The color isn't the problem; the white rectangle is."],["The file is too large","48 KB is small."],["The footer background should be white","The design calls for a dark footer."]],
+ fix:"Export the logo as SVG (best for vector logos) or a PNG with transparency",
+ fno:[["Increase the JPG quality","JPG never supports transparency."],["Crop the white box tighter","Any white background still shows."]],
+ why:"Choose formats by job: JPG for photos, PNG for transparency and flat graphics, SVG for logos and icons that must scale."},
+{cat:"digital",app:"Web",title:"A blurry banner on new phones",ticket:["Hero banner","Displays at 1200 × 400 px","High-density screens"],
+ view:()=>win("Illustrator","Export for Screens",null,dlg("Export for Screens",[["Asset","hero-banner"],["Scale","1x only",1],["Format","JPG 80"],["Output size","1200 × 400 px",1]])+`<div class="web" style="margin:10px"><div style="height:80px;background:linear-gradient(165deg,#8aa4c9,#e8d8b8);filter:blur(1.2px)"></div><div style="padding:8px;font:600 12px/1.2 'Source Sans 3';color:#555">Soft on high-density displays</div></div>`,true),
+ problem:"Only a 1x image was exported, so it looks soft on high-density (Retina) screens",
+ pno:[["The format should be BMP","BMP isn't a web format."],["The banner should be CMYK","Screens use RGB."],["1200 px is too wide for any screen","It's a common banner width."]],
+ fix:"Add a 2x export (2400 × 800 px) in <span class=path>Export for Screens</span> and serve it to high-density displays",
+ fno:[["Export at 300 ppi","Screens ignore ppi; only pixel dimensions matter."],["Sharpen the 1x image","It still has only half the pixels the screen can show."]],
+ why:"High-density screens use two or more device pixels per CSS pixel. A 2x asset gives them enough pixels to look sharp."},
+{cat:"digital",app:"Web",title:"A social graphic built like a print file",ticket:["Instagram post","1080 × 1350 px","RGB"],
+ view:()=>win("Illustrator","open-house-post.ai",page({w:8.5,h:10.5,bleed:.125,margin:.5,items:[[-.125,-.125,8.75,10.75,"background:#E8664A",""],[.8,1,7,2,"",T("Open House","font-size:24px;color:#fff")]]}),dlg("Document Setup",[["Size","8.5 × 10.5 in",1],["Color mode","CMYK",1],["Bleed","0.125 in",1],["Raster effects","300 ppi"]])),
+ problem:"The post is set up for print (inches, CMYK, bleed) instead of 1080 × 1350 px RGB",
+ pno:[["Only the bleed is wrong","Size units and color mode are also wrong for screen."],["Instagram posts must be square","Portrait posts are common; the ticket asks for 1080 × 1350."],["The raster effects should be 72 ppi","Pixel dimensions matter more than ppi for screens."]],
+ fix:"Create a new document at 1080 × 1350 px in RGB with no bleed, then rebuild or copy the artwork in",
+ fno:[["Export the print file as a JPG","Colors come from CMYK, and the size won't match exactly."],["Keep CMYK so it matches the print version","Social apps expect sRGB; CMYK looks dull or wrong."]],
+ why:"Screen pieces are measured in pixels, colored in RGB, and have no trim, so no bleed. Start from the right preset (Mobile or Web in the New Document dialog)."}
+];
+C.forEach((c,i)=>{c.n=i+1;const s=C.filter(x=>x.cat===c.cat);c.id=c.cat+"-"+(s.indexOf(c)+1)});
+
+/* ═════════ SETUP LAB TICKETS ═════════ */
+const JOBS=[
+ {n:"Business card",app:"Illustrator",specs:["3.5 × 2 in","Front and back","CMYK","0.125 in bleed","300 ppi effects"],
+  want:{w:3.5,h:2,u:"in",pages:2,bleed:.125,mode:"CMYK",raster:"300"},why:{pages:"One artboard per side: front and back.",raster:"Print effects need 300 ppi."}},
+ {n:"Tri-fold brochure",app:"InDesign",specs:["Letter, 11 × 8.5 in flat","2 pages: outside and inside","0.25 in margins","0.125 in bleed","Print"],
+  want:{w:11,h:8.5,u:"in",pages:2,facing:false,margin:.25,bleed:.125,mode:"CMYK"},why:{facing:"Each side of a folded brochure is a separate page, not a spread.",w:"Tri-folds are built flat and landscape."}},
+ {n:"Saddle-stitched booklet",app:"InDesign",specs:["5.5 × 8.5 in","16 pages","Facing pages","0.5 in margins","0.125 in bleed"],
+  want:{w:5.5,h:8.5,u:"in",pages:16,facing:true,margin:.5,bleed:.125,mode:"CMYK"},why:{facing:"Booklets are designed as spreads with inside/outside margins.",pages:"A multiple of 4."}},
+ {n:"Event poster",app:"Illustrator",specs:["18 × 24 in","1 artboard","CMYK","0.125 in bleed","300 ppi effects"],
+  want:{w:18,h:24,u:"in",pages:1,bleed:.125,mode:"CMYK",raster:"300"},why:{}},
+ {n:"Postcard",app:"InDesign",specs:["6 × 4 in","Front and back","0.25 in margins","0.125 in bleed","Print"],
+  want:{w:6,h:4,u:"in",pages:2,facing:false,margin:.25,bleed:.125,mode:"CMYK"},why:{facing:"A postcard's two sides aren't spreads."}},
+ {n:"Letterhead for office printing",app:"InDesign",specs:["Letter, 8.5 × 11 in","Printed on an office laser printer","0.5 in margins","No bleed"],
+  want:{w:8.5,h:11,u:"in",pages:1,facing:false,margin:.5,bleed:0,mode:"CMYK"},why:{bleed:"Office printers can't print to the edge or trim, so there's no bleed; keep art inside the margins."}},
+ {n:"Instagram portrait post",app:"Illustrator",specs:["1080 × 1350 px","RGB","No bleed","1 artboard"],
+  want:{w:1080,h:1350,u:"px",pages:1,bleed:0,mode:"RGB",raster:"72"},why:{mode:"Screens use RGB.",bleed:"Screens don't get trimmed.",raster:"For screen documents, pixel size matters; Screen (72 ppi) keeps effects at 1:1 pixels."}},
+ {n:"Web ad banner",app:"Illustrator",specs:["728 × 90 px","RGB","No bleed","1 artboard"],
+  want:{w:728,h:90,u:"px",pages:1,bleed:0,mode:"RGB",raster:"72"},why:{}}
+];
+
+/* ═════════ SWEEP JOBS ═════════ */
+const ISSUES={
+ size:"Page size doesn't match the ticket",nobleed:"Missing or insufficient bleed",trim:"Text too close to the trim",rgb:"RGB color or images in a CMYK job",
+ spot:"Unexpected spot color / extra plate",lowres:"Low effective image resolution",missing:"Missing or modified link",font:"Missing font",
+ overset:"Overset text",overprint:"White set to overprint",reg:"Registration color used for text",notes:"Non-printing content set to print"
+};
+const SWEEP=[
+ {n:"Harbor Yoga flyer",app:"InDesign",ticket:["8.5 × 11 in","CMYK only","0.125 in bleed","Text 0.25 in from trim"],has:["nobleed","trim","rgb","lowres"],
+  view:()=>win("InDesign","yoga-flyer-final.indd",page({w:8.5,h:11,bleed:0,margin:.5,items:[[0,0,8.5,4.5,"",pix],[.1,4.8,7,1,"",T("FIND YOUR PACE","font-size:17px")],[.5,6,7.5,3.5,"",lorem(12)]]}),dlg("Document Setup",[["Page size","8.5 × 11 in"],["Bleed","0 in"]])+links([{n:"sunrise.jpg",s:"ok",t:"RGB · 96 ppi eff."},{n:"logo.ai",s:"ok",t:"CMYK"}])+swatches([{n:"[Black]",c:"#111",t:"CMYK"},{n:"Sage",c:"#9CCB2B",t:"CMYK"}]))},
+ {n:"Gala program",app:"InDesign",ticket:["5.5 × 8.5 in","16 pages","CMYK","0.125 in bleed"],has:["font","overset","missing","notes"],
+  view:()=>win("InDesign","gala-program.indd",page({w:5.5,h:8.5,bleed:.125,margin:.5,items:[[.5,.5,4.5,.6,"background:#ff9ccf",T("Evening Program","font-size:16px")],[.5,1.3,4.5,5,"border:1px solid #4a90e2",lorem(16)],[3,.1,2.3,.5,"background:#FFF59D",T("NOTE: confirm speaker order","font-size:8px")]]}),layers([{n:"Notes",c:"#f5b400",t:"prints"},{n:"Text",c:"#4a90e2"},{n:"Images",c:"#50c878"}])+links([{n:"ballroom.tif",s:"missing",t:"p.1"},{n:"sponsor-logos.ai",s:"modified",t:"p.16"}])+preflight([{n:"Missing fonts (1)",e:1},{n:"Overset text (1)",e:1},{n:"Missing links (1)",e:1},{n:"Modified links (1)",e:1}]))},
+ {n:"Concert poster",app:"Illustrator",ticket:["18 × 24 in","4-color process only","0.125 in bleed"],has:["size","spot","overprint","reg"],
+  view:()=>win("Illustrator","northern-lights-poster.ai",page({w:11,h:17,bleed:.125,items:[[-.125,-.125,11.25,17.25,"background:#1E1B3A",""],[1,1.5,9,3,"",T("NORTHERN LIGHTS","font-size:22px;color:#fff")],[1,14,9,1.5,"",`<div style="font:400 9px/1.4 'Source Sans 3';color:#000;background:#E7B75F;padding:3px">Tickets at theclyde.com</div>`]],scale:15}),dlg("Document Setup",[["Artboard","11 × 17 in"],["Bleed","0.125 in"]])+swatches([{n:"PANTONE 7406 C",c:"#E7B75F",t:"Spot ●"},{n:"[Registration]",c:"#000",t:"used on ticket text"},{n:"White",c:"#fff",t:"headline"}])+dlg("Attributes (headline)",[["Overprint Fill","☑"]]))},
+ {n:"Bakery menu board",app:"InDesign",ticket:["24 × 36 in","CMYK","0.25 in bleed (large format)"],has:["nobleed","rgb","lowres","font"],
+  view:()=>win("InDesign","menu-board.indd",page({w:24,h:36,bleed:.125,margin:1,items:[[-.125,-.125,24.25,36.25,"background:#2b2522",""],[1.5,1.5,21,4,"background:#ff9ccf",T("Crumb & Co.","font-size:22px;color:#fff")],[1.5,7,10,9,"",pix],[12.5,7,10,24,"",lorem(20,"filter:invert(1)")]],scale:8}),dlg("Document Setup",[["Page size","24 × 36 in"],["Bleed","0.125 in"]])+links([{n:"croissant.jpg",s:"ok",t:"RGB · 45 ppi eff."}])+preflight([{n:"Missing fonts (1)",e:1},{n:"RGB images (1)",e:1}]))}
+];
+
+/* ═════════ STATE ═════════ */
+const $=id=>document.getElementById(id);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const RANKS=[[0,"Intern"],[120,"Production Artist"],[350,"Prepress Tech"],[700,"Preflight Pro"],[1200,"Production Manager"],[1900,"Print Master"]];
+let P={xp:0,streak:0,best:0,det:{}};
+try{Object.assign(P,JSON.parse(localStorage.getItem("production-detective")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("production-detective",JSON.stringify(P))}catch(e){}};
+let tab="cases",R=null,scope="all",deck=[],pos=0,chall=null,jobDeck=[],jobPos=0,swDeck=[],swPos=0;
+
+function renderRank(){const cur=[...RANKS].reverse().find(r=>P.xp>=r[0]),i=RANKS.indexOf(cur),nx=RANKS[i+1];
+ $("rankName").textContent=cur[1];$("xpText").textContent=`${P.xp} XP`+(nx?` / ${nx[0]}`:"");
+ $("xpBar").style.width=(nx?Math.min(100,(P.xp-cur[0])/(nx[0]-cur[0])*100):100)+"%";
+ $("streakText").textContent=`Streak ${P.streak} · Best ${P.best}`+(P.streak>=3?" · streak bonus active":"")}
+function award(ok,base){if(!ok){P.streak=0;save();renderRank();return 0}P.streak++;P.best=Math.max(P.best,P.streak);const pts=base*(chall?2:1)+(P.streak>=3?3:0);P.xp+=pts;save();renderRank();return pts}
+function renderTerms(){
+ $("terms").innerHTML=`<p class="group">Categories</p><div class="terms">${CATS.map(([k,n,d])=>{const cs=C.filter(c=>c.cat===k),got=cs.filter(c=>P.det[c.id]).length;return `<button type="button" class="term${scope===k?" sel":""}" data-key="${k}"><span class="tn"><span>${n}</span><span class="tp${got===cs.length?" done":""}">${got}/${cs.length}</span></span><span class="td">${d}</span></button>`}).join("")}</div>
+ <p class="group">Terms printers use</p><div class="terms">${TERMS.map(([n,d])=>`<div class="term"><span class="tn"><span>${n}</span></span><span class="td">${d}</span></div>`).join("")}</div>`;
+ $("terms").querySelectorAll("button.term").forEach(t=>t.onclick=()=>{scope=t.dataset.key;deck=[];pos=0;setTab("cases");$("play").scrollIntoView({block:"start",behavior:reduced?"auto":"smooth"})})}
+function highlight(k){document.querySelectorAll(".term.on").forEach(t=>t.classList.remove("on"));const c=document.querySelector(`.term[data-key="${k}"]`);if(c){c.classList.add("on");const side=document.querySelector(".vocab");if(getComputedStyle(side).position==="sticky")side.scrollTop=c.offsetTop-side.offsetTop-60}}
+const ticketHTML=(title,specs)=>`<div class="ticket"><b>Job ticket · ${title}</b><ul>${specs.map(s=>`<li>${s}</li>`).join("")}</ul></div>`;
+function radioOpts(list,legend,step){$("fs").hidden=false;$("legend").innerHTML=`${step?`<span class="stepn">Step ${step} of 2</span>`:""}${legend}`;$("opts").innerHTML=list.map((o,i)=>`<label class="opt" for="o${i}"><input type="${o.multi?"checkbox":"radio"}" name="o" id="o${i}" value="${i}"><span>${o.t}</span><span class="why" hidden></span></label>`).join("");$("opts").querySelectorAll("input").forEach(r=>r.onchange=()=>$("checkBtn").disabled=!$("opts").querySelector("input:checked"))}
+const selIdx=()=>{const r=document.querySelector('input[name="o"]:checked');return r?+r.value:-1};
+const catName=k=>CATS.find(c=>c[0]===k)[1];
+
+/* ═════════ ROUND: PREFLIGHT CASE (2 steps) ═════════ */
+function caseRound(c){
+ let step=1,okP=false;const pOpts=shuffle([{t:c.problem,ok:1},...shuffle(c.pno).slice(0,3).map(([t,w])=>({t,w}))]),fOpts=shuffle([{t:c.fix,ok:1},...c.fno.map(([t,w])=>({t,w}))]);
+ const mark=(opts,s,lab1)=>{$("opts").querySelectorAll(".opt").forEach((l,i)=>{const o=opts[i],w=l.querySelector(".why");l.classList.add("locked");l.querySelector("input").disabled=true;if(o.ok){l.classList.add("right");w.innerHTML=`<b>${lab1}</b>`}else{if(i===s)l.classList.add("wrong");w.innerHTML=`<b class="no">No</b>${o.w}`}w.hidden=false})};
+ return{type:"case",c,label:chall?`Preflight case · ${catName(c.cat)}`:`Case ${String(c.n).padStart(2,"0")} of ${C.length} · ${c.app}`,title:"What will stop this job?",piece:"Compare the file with the job ticket. First find the problem, then choose the fix.",
+  ctrl:()=>chall?"":`<span class="lbl">Cases</span><select id="scopeSel"><option value="all">All ${C.length} cases</option>${CATS.map(([k,n])=>`<option value="${k}" ${scope===k?"selected":""}>${n} (${C.filter(x=>x.cat===k).length})</option>`).join("")}</select>`,
+  bindCtrl(){const s=$("scopeSel");if(s){s.value=scope;s.onchange=()=>{scope=s.value;deck=[];pos=0;newRound()}}},
+  draw(){$("ticketBox").innerHTML=ticketHTML(c.ticket[0],c.ticket.slice(1));$("stage").innerHTML=c.view();radioOpts(pOpts,"What's the problem?",1);$("checkBtn").textContent="Check problem"},
+  check(){const s=selIdx();if(step===1){okP=!!pOpts[s].ok;const p=award(okP,10);mark(pOpts,s,"Problem");step=2;
+    $("feedback").innerHTML=`<div class="verdict">${okP?'<span class="pill ok">Problem found</span>':'<span class="pill no">Not quite</span>'}${p?`<span class="pill xp">+${p} XP</span>`:""}</div>${okP?"":`<p>The problem: <b>${c.problem}</b></p>`}<p class="muted">Now choose the fix.</p>`;
+    $("status").textContent="";$("checkBtn").textContent="Check fix";$("checkBtn").disabled=true;
+    const host=document.createElement("div");host.id="step2";host.style.marginTop="18px";$("fs").after(host);
+    host.innerHTML=`<fieldset style="margin:0"><legend><span class="stepn">Step 2 of 2</span>How do you fix it?</legend><div class="opts" id="opts2">${fOpts.map((o,i)=>`<label class="opt" for="f${i}"><input type="radio" name="f" id="f${i}" value="${i}"><span>${o.t}</span><span class="why" hidden></span></label>`).join("")}</div></fieldset>`;
+    host.querySelectorAll("input").forEach(r=>r.onchange=()=>$("checkBtn").disabled=false);
+    host.scrollIntoView({block:"nearest",behavior:reduced?"auto":"smooth"});return null}
+   const r=document.querySelector('input[name="f"]:checked');const s2=+r.value,okF=!!fOpts[s2].ok,p=award(okF,10);
+   $("opts2").querySelectorAll(".opt").forEach((l,i)=>{const o=fOpts[i],w=l.querySelector(".why");l.classList.add("locked");l.querySelector("input").disabled=true;if(o.ok){l.classList.add("right");w.innerHTML="<b>Fix</b>"}else{if(i===s2)l.classList.add("wrong");w.innerHTML=`<b class="no">No</b>${o.w}`}w.hidden=false});
+   const full=okP&&okF;if(full&&!P.det[c.id]){P.det[c.id]=1;save()}
+   return{ok:full,part:okP||okF,pts:p,hl:c.cat,title:c.title,html:`<p>${okF?"":`The fix: <b>${c.fix}</b>`}</p><p>${c.why}</p>`,miss:{t:c.title,fix:`${catName(c.cat)}: ${c.fix.replace(/<[^>]+>/g,"")}`}}}}
+}
+function nextCase(){const pool=C.filter(c=>scope==="all"||c.cat===scope);if(pos>=deck.length){deck=shuffle(pool);pos=0}return caseRound(deck[pos++])}
+
+/* ═════════ ROUND: SETUP LAB ═════════ */
+function setupRound(J){
+ J=J||(()=>{if(jobPos>=jobDeck.length){jobDeck=shuffle(JOBS);jobPos=0}return jobDeck[jobPos++]})();const Id=J.app==="InDesign";
+ const F=[["w","Width"],["h","Height"],["u","Units"],["pages",Id?"Number of pages":"Number of artboards"],...(Id?[["facing","Facing Pages"],["margin","Margins (all sides)"]]:[]),["bleed","Bleed (all sides)"],["mode",Id?"Intent":"Color mode"],...(Id?[]:[["raster","Raster effects"]])];
+ return{type:"setup",label:`Setup Lab · ${J.app}`,title:`Set up the ${J.n.toLowerCase()}`,piece:`Fill in ${J.app}'s New Document settings to match the job ticket. Units matter: enter inches as decimals (0.125).`,
+  ctrl:()=>"",bindCtrl(){},
+  draw(){$("ticketBox").innerHTML=ticketHTML(J.n,J.specs);
+   $("stage").innerHTML=`<div class="appwin"><div class="apptop"><span class="dots"><i></i><i></i><i></i></span><span class="an">${J.app}</span><span class="fn">New Document</span></div><div class="nd" id="nd">
+   <h5>${Id?"New Document · Print":"New Document · Preset Details"}</h5>
+   <label id="L-w">Width<input id="nd-w" inputmode="decimal" autocomplete="off"></label>
+   <label id="L-h">Height<input id="nd-h" inputmode="decimal" autocomplete="off"></label>
+   <label id="L-u">Units<select id="nd-u"><option value="">Choose</option><option value="in">Inches</option><option value="px">Pixels</option><option value="mm">Millimeters</option><option value="pt">Points</option></select></label>
+   <label id="L-pages">${Id?"Pages":"Artboards"}<input id="nd-pages" inputmode="numeric" autocomplete="off"></label>
+   ${Id?`<label class="cb" id="L-facing"><input type="checkbox" id="nd-facing"> Facing Pages</label><label id="L-margin">Margins (all)<input id="nd-margin" inputmode="decimal" autocomplete="off"></label>`:""}
+   <label id="L-bleed">Bleed (all)<input id="nd-bleed" inputmode="decimal" autocomplete="off"></label>
+   <label id="L-mode">${Id?"Intent":"Color Mode"}<select id="nd-mode"><option value="">Choose</option>${Id?`<option value="CMYK">Print (CMYK)</option><option value="RGB">Web / Mobile (RGB)</option>`:`<option value="CMYK">CMYK Color</option><option value="RGB">RGB Color</option>`}</select></label>
+   ${Id?"":`<label id="L-raster">Raster Effects<select id="nd-raster"><option value="">Choose</option><option value="72">Screen (72 ppi)</option><option value="150">Medium (150 ppi)</option><option value="300">High (300 ppi)</option></select></label>`}
+   </div></div>`;
+   $("stage").querySelectorAll("input,select").forEach(e=>e.oninput=e.onchange=()=>{$("checkBtn").disabled=false});$("checkBtn").textContent="Create document";$("checkBtn").disabled=false},
+  check(){const W=J.want,res=[];let right=0,total=0;
+   const val=k=>{const e=$("nd-"+k);return e.type==="checkbox"?e.checked:e.value.trim()};
+   F.forEach(([k,lab])=>{if(!(k in W))return;total++;let v=val(k),ok;
+    if(typeof W[k]==="number"){const n=parseFloat(String(v).replace(/[^\d.]/g,""));ok=!isNaN(n)&&Math.abs(n-W[k])<.0005}else if(typeof W[k]==="boolean")ok=v===W[k];else ok=v===W[k];
+    if(ok)right++;$("L-"+k).classList.add(ok?"ok":"no");
+    const want=typeof W[k]==="boolean"?(W[k]?"on":"off"):k==="mode"?(W[k]==="CMYK"?(Id?"Print (CMYK)":"CMYK"):(Id?"Web (RGB)":"RGB")):k==="raster"?`${W[k]} ppi`:W[k];
+    res.push(`<li><b style="color:var(--${ok?"good":"bad"})">${ok?"✓":"✕"}</b><span><b style="width:auto;display:inline">${lab}:</b> ${ok?"correct":`should be <b style="width:auto;display:inline">${want}</b>`}${J.why[k]?` · ${J.why[k]}`:""}</span></li>`)});
+   const ok=right===total,p=award(ok,20);$("stage").querySelectorAll("input,select").forEach(e=>e.disabled=true);
+   return{ok,pts:p,hl:"setup",title:ok?"Document set up correctly":`${right} of ${total} settings correct`,html:`<ul class="res">${res.join("")}</ul><p class="muted">In ${J.app}, these live in the New Document dialog and later in <span class="path">File › Document Setup</span>${Id?" and Layout › Margins and Columns":""}.</p>`,miss:{t:`Setup: ${J.n}`,fix:J.specs.join(" · ")}}}}
+}
+
+/* ═════════ ROUND: PRINTER'S SWEEP (multi-select) ═════════ */
+function sweepRound(S){
+ S=S||(()=>{if(swPos>=swDeck.length){swDeck=shuffle(SWEEP);swPos=0}return swDeck[swPos++]})();
+ const keys=shuffle(Object.keys(ISSUES)),opts=keys.map(k=>({k,t:ISSUES[k],multi:1,ok:S.has.includes(k)}));
+ return{type:"sweep",label:`Printer's Sweep · ${S.app}`,title:`Sweep the ${S.n.toLowerCase()} before it goes to press`,piece:`Check every panel against the ticket. Select every problem you find (there are ${S.has.length}).`,
+  ctrl:()=>"",bindCtrl(){},
+  draw(){$("ticketBox").innerHTML=ticketHTML(S.n,S.ticket);$("stage").innerHTML=S.view();radioOpts(opts,"Select every problem in this file");$("checkBtn").textContent="Submit report"},
+  check(){const sel=[...$("opts").querySelectorAll("input:checked")].map(i=>+i.value);let hit=0,fa=0;
+   $("opts").querySelectorAll(".opt").forEach((l,i)=>{const o=opts[i],chosen=sel.includes(i);l.classList.add("locked");l.querySelector("input").disabled=true;if(o.ok&&chosen){l.classList.add("right");hit++}else if(o.ok){l.classList.add("missed");l.querySelector(".why").innerHTML="<b>Missed</b>";l.querySelector(".why").hidden=false}else if(chosen){l.classList.add("wrong");fa++}});
+   const ok=hit===S.has.length&&!fa,p=award(hit>0&&!fa||ok,Math.max(0,hit*6-fa*4)+(ok?6:0));
+   return{ok,pts:p,hl:"export",title:ok?"Clean sweep":`Found ${hit} of ${S.has.length}${fa?` · ${fa} false alarm${fa>1?"s":""}`:""}`,html:`<p>A real preflight catches everything at once, because each problem found later costs a new proof. Missed items are marked in amber.</p><p class="muted">Tip: work panel by panel: Document Setup (size, bleed), Links (missing, RGB, effective ppi), Swatches (RGB, spot, registration), Layers (printing notes), Preflight (fonts, overset), then the page itself (trim).</p>`,miss:{t:`Sweep: ${S.n}`,fix:S.has.map(k=>ISSUES[k]).join(" · ")}}}}
+}
+
+/* ═════════ RUNNER ═════════ */
+function paint(){
+ $("caseLabel").textContent=chall?`Challenge · question ${chall.i+1} of ${chall.n}`:R.label;$("progress").textContent=chall?`Score ${chall.score}`:"";
+ $("caseTitle").textContent=R.title;$("piece").textContent=R.piece;$("termChip").hidden=true;
+ $("ctrl").innerHTML=R.ctrl();$("ctrl").hidden=!$("ctrl").innerHTML.trim();R.bindCtrl();
+ $("fs").hidden=true;$("opts").innerHTML="";const s2=$("step2");if(s2)s2.remove();$("feedback").innerHTML="";$("status").textContent="";$("ticketBox").innerHTML="";
+ $("checkBtn").hidden=false;$("checkBtn").disabled=true;$("nextBtn").hidden=true;
+ R.draw();document.querySelectorAll(".term.on").forEach(t=>t.classList.remove("on"))}
+function newRound(){const type=chall?chall.list[chall.i]:tab;R=type==="setup"?setupRound():type==="sweep"?sweepRound():chall?caseRound(chall.cases.pop()):nextCase();R.answered=false;paint()}
+function check(){
+ if(!R||R.answered)return;const res=R.check();if(!res)return;R.answered=true;
+ $("caseTitle").textContent=res.title;const cat=CATS.find(c=>c[0]===res.hl);if(cat){$("termChip").textContent=cat[1];$("termChip").hidden=false;highlight(res.hl)}
+ const head=R.type==="case"?"":`<div class="verdict">${res.ok?'<span class="pill ok">Correct</span>':'<span class="pill no">Not quite</span>'}${res.pts?`<span class="pill xp">+${res.pts} XP</span>`:""}</div>`;
+ const tail=R.type==="case"?`<div class="verdict">${res.ok?'<span class="pill ok">Problem and fix correct</span>':'<span class="pill no">Review this one</span>'}${res.pts?`<span class="pill xp">+${res.pts} XP</span>`:""}</div>`:"";
+ $("feedback").innerHTML=(R.type==="case"?tail:head)+res.html;$("feedback").scrollIntoView({block:"nearest",behavior:reduced?"auto":"smooth"});
+ if(chall){if(res.ok)chall.score++;else chall.missed.push(res.miss);$("progress").textContent=`Score ${chall.score}`}
+ renderTerms();if(cat)highlight(res.hl);
+ $("checkBtn").hidden=true;$("nextBtn").hidden=false;$("nextBtn").textContent=chall&&chall.i+1>=chall.n?"See results":"Next";$("nextBtn").focus({preventScroll:true})}
+function next(){if(chall){if(chall.i+1>=chall.n)return results();chall.i++}newRound();const r=$("play").getBoundingClientRect();if(r.top<0)$("play").scrollIntoView({block:"start",behavior:reduced?"auto":"smooth"})}
+function renderSetup(){$("lengths").innerHTML=[[10,7,2,1],[16,11,3,2],[24,17,4,3]].map(([n,c,s,w])=>`<button type="button" data-a="${n},${c},${s},${w}"><b>${n}</b><small>${c} cases · ${s} setups · ${w} sweep${w>1?"s":""}</small></button>`).join("");$("lengths").querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>startChallenge(...b.dataset.a.split(",").map(Number)))}
+function startChallenge(n,c,s,w){chall={n,i:0,score:0,missed:[],list:shuffle([...Array(c).fill("case"),...Array(s).fill("setup"),...Array(w).fill("sweep")]),cases:shuffle(C).slice(0,c)};$("csetup").hidden=true;$("play").hidden=false;$("results").hidden=true;newRound()}
+function results(){const c=chall,pct=Math.round(c.score/c.n*100);chall=null;$("play").hidden=true;
+ $("results").innerHTML=`<p class="meta" style="margin:0">Challenge complete</p><div class="big">${c.score} / ${c.n}</div><p class="muted" style="margin:0">${pct}% fully correct · points were doubled</p>`+
+ (c.missed.length?`<h2 style="margin-top:20px;font-size:20px">Review these</h2><ul class="missed">${c.missed.map(m=>`<li><b>${esc(m.t)}</b><small>${esc(m.fix)}</small></li>`).join("")}</ul>`:`<p style="margin-top:14px">Every answer correct. Ready for press.</p>`)+
+ `<div class="actions"><button type="button" class="primary" id="againBtn">New challenge</button><button type="button" class="secondary" id="backBtn">Back to cases</button></div>`;
+ $("results").hidden=false;$("againBtn").onclick=()=>setTab("challenge");$("backBtn").onclick=()=>setTab("cases")}
+function setTab(t){tab=t;chall=null;document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tab===t));$("results").hidden=true;$("csetup").hidden=t!=="challenge";$("play").hidden=t==="challenge";renderTerms();if(t==="challenge")renderSetup();else newRound()}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+$("checkBtn").onclick=check;$("nextBtn").onclick=next;
+$("resetBtn").onclick=()=>{P={xp:0,streak:0,best:0,det:{}};save();renderRank();renderTerms()};
+renderRank();setTab("cases");
+</script>
+
+</body>
+</html>
